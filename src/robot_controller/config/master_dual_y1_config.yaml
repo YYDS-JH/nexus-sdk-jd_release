@@ -1,0 +1,70 @@
+/**:
+  ros__parameters:
+    master_robot_cfg:
+      robot_name: "y1_master"
+      robot_type: "imeta"
+      urdf_path: "package://robot_controller/urdf/dual_y1_with_gripper.urdf"
+      robot_base_frame: "base_link"
+      model_configuration: ["right_wrist", "left_wrist", "right_end_effector", "left_end_effector"]
+      
+      # ==================== configuration ====================
+      # ==================== Arm 配置（6-DOF）====================
+      right_wrist:
+        arm_base_frame: "right_base_link"
+        end_effector_link: "right_gripper_keypoint"
+        arm_joint_indices: [0, 1, 2, 3, 4, 5]
+        arm_joint_names: ["right_joint1", "right_joint2", "right_joint3", "right_joint4", "right_joint5", "right_joint6"]
+        # arm_init_joint_position: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        arm_init_joint_position: [0.0, -0.5, 1.0, 0.0, 0.0, 0.0]
+        arm_init_position_matrix: [
+          1.0, 0.0, 0.0, 0.0,   # row 0: X-axis direction + X translation
+          0.0, 1.0, 0.0, 0.0,   # row 1: Y-axis direction + Y translation
+          0.0, 0.0, 1.0, 0.0,   # row 2: Z-axis direction + Z translation
+          0.0, 0.0, 0.0, 1.0    # row 3: homogeneous coordinates
+        ]
+
+
+      left_wrist:
+        arm_base_frame: "left_base_link"
+        end_effector_link: "left_gripper_keypoint"
+        arm_joint_indices: [7, 8, 9, 10, 11, 12]
+        arm_joint_names: ["left_joint1", "left_joint2", "left_joint3", "left_joint4", "left_joint5", "left_joint6"]
+        arm_init_joint_position: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        arm_init_position_matrix: [
+          1.0, 0.0, 0.0, 0.0,   # row 0: X-axis direction + X translation
+          0.0, 1.0, 0.0, 0.0,   # row 1: Y-axis direction + Y translation
+          0.0, 0.0, 1.0, 0.0,   # row 2: Z-axis direction + Z translation
+          0.0, 0.0, 0.0, 1.0    # row 3: homogeneous coordinates
+        ]
+             
+      # ==================== End-effector 配置（Gripper 1-DOF）====================
+      right_end_effector:
+        type: "gripper"
+        name: "right_gripper"
+        end_effector_base: "right_gripper_base"
+        end_effector_dof: 2
+        end_effector_joint_indices: [6, 7]
+        end_effector_joint_names: ["right_joint7", "right_joint8"]
+        end_effector_init_position: [0.0]   # 硬件驱动层自由度1维，初始位置0.0
+             
+      left_end_effector:
+        type: "gripper"
+        name: "left_gripper"
+        end_effector_base: "left_gripper_base"
+        end_effector_dof: 2
+        end_effector_joint_indices: [13, 14]
+        end_effector_joint_names: ["left_joint7", "left_joint8"]
+        end_effector_init_position: [0.0]   # 硬件驱动层自由度1维，初始位置0.0
+    
+    # ==================== ros2 topic ====================
+    joint_mit_control_topic: "/teleop/joint_cmd"
+    joint_state_topic: "/teleop/joint_states"
+    status_topic: "/teleop/arm_status"
+    # 其他 topic
+    controller_config_service: "/teleop/teleop_controller_config"
+    end_effector_state_topic: "/teleop/human_data"
+    end_wrench_state_topic: "/teleop/end_wrench"
+    end_effector_cmd_topic: "/teleop/end_effector_cmd"
+    node_state_topic: "/teleop/controller_state"
+    right_wrist_cartesian_impedance_topic: "y1_slave/robot/right_cartesian_impedance"
+    left_wrist_cartesian_impedance_topic: "y1_slave/robot/left_cartesian_impedance"

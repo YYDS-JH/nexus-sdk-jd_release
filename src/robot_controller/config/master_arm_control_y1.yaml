@@ -1,0 +1,64 @@
+/**:
+  ros__parameters:    
+    master_arm_controller:
+      # ========================================
+      # 共享控制参数（所有机械臂通用）
+      # ========================================
+      # 控制频率参数
+      control_publish_rate: 500      # 控制命令发布频率 (Hz)
+      state_publish_rate: 10          # 节点状态发布频率 (Hz)
+      
+      # 故障检测参数
+      startup_check_timeout: 10.0    # 启动自检等待超时 (秒)
+      
+      # 力反馈增益系数，设置为0时，不启用力反馈
+      force_feedback_gain: 0.0
+      
+      # === 逆运动学求解器配置 ===
+      ik_config:
+        ik_damp: 0.01                    # 阻尼系数
+        weight_ik: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]  # 位姿权重 [x, y, z, roll, pitch, yaw]
+        ik_iter_max: 50                  # 最大迭代次数
+        ik_dt: 1.0                       # 时间步长
+        singular_values_min: 1e-6        # 最小奇异值阈值
+        max_damp: 0.1                    # 最大阻尼系数
+        epsilon: 1e-6                    # 收敛阈值
+        ref_joint_penalty: 0.01          # 零空间惩罚权重
+        ref_joint_kp: 1.0                # 参考关节控制增益
+      
+      # === 关节限制参数（仅针对arm的arm_dof个关节）===
+      joint_limits:
+        max_velocity: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]        # 最大速度 (rad/s)
+        max_acceleration: [2.0, 2.0, 2.0, 2.0, 2.0, 2.0]    # 最大加速度 (rad/s²)
+        max_jerk: [5.0, 5.0, 5.0, 5.0, 5.0, 5.0]            # 最大加加速度 (rad/s³)
+      
+      # === 运动规划类型配置 ===
+      motion_planning_type: 1  # 0: INTERPOLATE (线性插值), 1: SCURVE (S曲线)
+        
+      # === 重力补偿控制参数（用于 TELEOP 状态，允许用户拖动）===
+      # Kp - 位置刚度（较小值，允许位置偏差）
+      gravity_comp_kp: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      
+      # Kd - 速度阻尼（提供阻尼，避免振荡）
+      gravity_comp_kd: [0.7, 1.5, 2.0, 0.6, 0.2, 0.1]
+      
+      # === 运动规划控制参数（用于 TELEOP_INIT 状态，快速跟踪目标）===
+      # Kp - 位置刚度（较大值，快速响应位置误差）
+      motion_planning_kp: [20.0, 60.0, 40.0, 20.0, 20.0, 5.0]
+      
+      # Kd - 速度阻尼（避免超调和振荡）
+      motion_planning_kd: [1.0, 3.0, 2.0, 2.0, 2.0, 0.2]
+
+      #=== 阻尼控制参数（用于 TELEOP_IDLE TELEOP_FAULT状态，平滑运动）===
+      # Kp - 位置刚度（中等值，平滑位置控制）
+      damping_control_kp: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0] 
+
+      # Kd - 速度阻尼（提供适度阻尼）
+      damping_control_kd: [1.0, 1.0, 1.0, 1.0, 1.0, 0.1]
+
+      # === 笛卡尔空间阻抗控制参数（用于增量遥控模式，定点阻抗弹性模式）===
+      # Kp - 位置/姿态刚度 [x, y, z, roll, pitch, yaw]
+      cart_imped_kp: [50.0, 50.0, 50.0, 5.0, 5.0, 5.0]
+
+      # Kd - 位置/姿态阻尼 [x, y, z, roll, pitch, yaw]
+      cart_imped_kd: [0.5, 0.5, 0.5, 0.1, 0.1, 0.1]

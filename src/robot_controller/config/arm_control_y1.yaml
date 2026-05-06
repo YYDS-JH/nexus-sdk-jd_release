@@ -1,0 +1,150 @@
+/**:
+  ros__parameters:    
+    master_arm_controller:
+      # ========================================
+      # 共享控制参数（所有机械臂通用）
+      # ========================================
+      # 仿真模式标志
+      is_simulation: false           # true: 仿真模式（不加电机惯量）, false: 真实机器人（加电机惯量）
+      
+      # 控制频率参数
+      control_publish_rate: 500      # 控制命令发布频率 (Hz)
+      state_publish_rate: 10          # 节点状态发布频率 (Hz)
+      # Teleop 管理器状态话题（用于 suspend 期间禁用力反馈）
+      teleop_manager_state_topic: "/teleop/teleop_manager_state"
+
+      # 故障检测参数
+      startup_check_timeout: 10.0    # 启动自检等待超时 (秒)
+      
+      # === 末端力反馈（6D，FSM 模式，与夹爪一致：|delta_x|>阈值持续一段时间进入 HOLDING，力从 lower 线性过渡到 upper 后维持）===
+      ee_ff_gain: 0.0
+      ee_ff_delta_threshold: [0.05, 0.08, 0.05, 0.2, 0.2, 0.2]   # 各分量进入/退出判定的 |delta_x(i)| 阈值
+      ee_ff_hold_entry_time_s: 0.1    # 超过阈值持续该时长(s)后进入 HOLDING
+      ee_ff_free_entry_time_s: 0.1    # 低于阈值持续该时长(s)后退出 HOLDING
+      ee_ff_ramp_tau_s: 0.1          # 进入 HOLDING 后力从下限到上限的线性过渡时间(s)
+      ee_ff_force_lower_limit: [4.0, 4.0, 4.0, 0.0, 0.0, 0.0]   # 各分量力反馈幅度下限
+      ee_ff_force_upper_limit: [6.0, 6.0, 6.0, 0.0, 0.0, 0.0]   # 各分量力反馈幅度上限
+      ee_ff_holding_kd: [0.5, 0.5, 0.5, 0.0, 0.0, 0.0]   # 仅 HOLDING 时叠加笛卡尔阻尼 F_damp=-Kd*v_ee，随力反馈传到主臂；[fx,fy,fz,mx,my,mz]，全0则不加
+      
+      # === 逆运动学求解器配置 ===
+      ik_config:
+        ik_damp: 0.0001                    # 阻尼系数
+        weight_ik: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]  # 位姿权重 [x, y, z, roll, pitch, yaw]
+        ik_iter_max: 100                  # 最大迭代次数
+        ik_dt: 0.2                       # 时间步长
+        singular_values_min: 0.01        # 最小奇异值阈值
+        max_damp: 0.08                    # 最大阻尼系数
+        epsilon: 0.002                    # 收敛阈值
+        ref_joint_penalty: 0.01          # 零空间惩罚权重
+        ref_joint_kp: 1.0                # 参考关节控制增益
+      
+      # === 关节限制参数（仅针对arm的arm_dof个关节）===
+      joint_limits:
+        max_velocity: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]        # 最大速度 (rad/s)
+        max_acceleration: [2.0, 2.0, 2.0, 2.0, 2.0, 2.0]    # 最大加速度 (rad/s²)
+        max_jerk: [5.0, 5.0, 5.0, 5.0, 5.0, 5.0]            # 最大加加速度 (rad/s³)
+      
+      # === 电机参数（仅针对arm的arm_dof个关节）===
+      motor_params:
+        rotor_inertia: [0.00002259318, 0.00006008535, 0.00002374422, 0.00002374422, 0.0000228576, 0.0000228576]  # 电机转子惯量 (kg·m²)
+        gear_ratio: [40.0, 48.0, 40.0, 40.0, 10.0, 10.0]    # 减速比
+      
+      # === 运动规划类型配置 ===
+      motion_planning_type: 2 # 0: INTERPOLATE (线性插值), 1: SCURVE (S曲线), 2: POLYNOMIAL (多项式插值)
+        
+      # === 重力补偿控制参数（用于 TELEOP 状态，允许用户拖动）===
+      # Kp - 位置刚度（较小值，允许位置偏差）
+      gravity_comp_kp: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      
+      # Kd - 速度阻尼（提供阻尼，避免振荡）
+      gravity_comp_kd: [0.1, 0.1, 0.1, 0.2, 0.2, 0.2]
+      
+      # gravity_comp_kp_velocity_threshold - Kp自适应速度阈值 (rad/s)
+      # 当滤波后的速度二范数小于此阈值时，启用设定的Kp；否则Kp置0
+      # 这样可以避免在快速运动时产生过大的位置刚度，允许用户自由拖动
+      gravity_comp_kp_velocity_threshold: 0.05
+      
+      # === 运动规划控制参数（用于 TELEOP_INIT 状态，快速跟踪目标）===
+      # Kp - 位置刚度（较大值，快速响应位置误差）
+      motion_planning_kp: [40.0, 65.0, 55.0, 25.0, 13.0, 8.0]
+      
+      # Kd - 速度阻尼（避免超调和振荡）
+      # motion_planning_kd: [2.0, 3.0, 2.0, 2.0, 2.0, 0.2]
+      motion_planning_kd: [0.9, 0.7, 0.8, 0.8, 0.7, 0.7]
+
+      #=== 阻尼控制参数（用于 TELEOP_IDLE TELEOP_FAULT状态，平滑运动）===
+      # Kp - 位置刚度（中等值，平滑位置控制）
+      damping_control_kp: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0] 
+
+      # Kd - 速度阻尼（提供适度阻尼）
+      damping_control_kd: [1.0, 1.0, 1.0, 1.0, 1.0, 0.1]
+
+      # === 笛卡尔空间阻抗控制参数（用于增量遥控模式，定点阻抗弹性模式）===
+      # Kp - 位置/姿态刚度 [x, y, z, roll, pitch, yaw]
+      # cart_imped_kp: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      # cart_imped_kp: [300.0, 120.0, 150.0, 2.0, 5.0, 3.0]
+      cart_imped_kp: [50.0, 50.0, 50.0, 20.0, 10.0, 10.0]
+
+      # Kd - 位置/姿态阻尼 [x, y, z, roll, pitch, yaw]
+      # cart_imped_kd: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      cart_imped_kd: [0.7, 0.7, 0.7, 0.7, 0.7, 0.7]
+      # cart_imped_kd: [2.0, 2.0, 2.0, 2.0, 0.5, 0.1]
+
+      # === 对角化阻尼配置 ===
+      enable_double_diag_damping: true  # 是否启用双对角化阻尼，false时使用常规对角阻尼
+
+      # === CBF 理想模型笛卡尔空间控制参数 [x, y, z, roll, pitch, yaw] ===
+      cbf_cart_kp: [700.0, 700.0, 700.0, 600.0, 600.0, 600.0]  # CBF 笛卡尔空间刚度
+      cbf_cart_zeta: [30.0, 30.0, 30.0, 30.0, 30.0, 30.0]                   # CBF 笛卡尔空间阻尼比
+
+      # === PID积分控制参数（消除静态误差）===
+      enable_integral_control: false                              # 是否启用积分控制
+      joint_ki: [20.0, 30.0, 30.0, 35.0, 20.0, 20.0]               # 关节空间积分增益
+      integral_limit: [15.0, 30.0, 15.0, 5.0, 5.0, 5.0]            # 积分力矩限幅（N·m）
+      output_limit: [30.0, 100.0, 30.0, 10.0, 10.0, 10.0]  # PID总输出力矩限幅（N·m）
+      # ==================== CBF Configuration ====================
+      enable_cbf: true
+      cbf_urdf_path: "robot_controller/oscbf/cbf_y1_spherized.urdf"  # 与 AR5 的 cbf_ar5_spherized.urdf 同目录，便于区分机型
+      cbf_config:
+        enable_task_space: true
+        enable_joint_limit: true
+        enable_joint_velocity: true
+        enable_self_collision: false
+        enable_arm_obstacle_avoidance: true  # 是否启用整臂避障（替代末端避障）
+        # 碰撞对：一维字符串数组，每两个元素为一对 [link1, link2]
+        # 臂段自碰撞(保留) + 夹爪末端/夹爪基座 vs 机械臂基座/link1/link2
+        collision_pairs: ["link1", "link4", "link1", "link3", "link7", "link1", "link8", "link1"]  # 臂段自碰撞 + 夹爪末端-link1
+          
+        task_space_config:
+          limits:
+            x: [0.1, 0.8]   # X轴范围（米）
+            y: [-0.8, 0.8]   # Y轴范围（米）
+            z: [-0.1, 0.8]    # Z轴范围（米）
+          alpha: 1000.0       # CBF 系数
+          safety_margin: 0.01  # 安全边距（米）
+          
+        # 关节限位配置（如果启用）
+        joint_limit_config:
+          min: [-1.0, -3.14, 0.0, -2.0, -2.0, -2.529]  # 最小关节角度（rad）
+          max: [1.0, 0.0, 2.5, 1.0, 2.0, 2.529]        # 最大关节角度（rad）
+          safety_margin: 0.01   # 安全边距（rad）
+          alpha: 200.0          # CBF 系数
+        
+        # 关节速度约束配置（如果启用）
+        joint_velocity_config:
+          min: [-5.0, -5.0, -5.0, -5.0, -5.0, -5.0]  # 最小关节速度（rad/s）
+          max: [5.0, 5.0, 5.0, 5.0, 5.0, 5.0]       # 最大关节速度（rad/s）
+          safety_margin: 0.1    # 安全边距（rad/s）
+          alpha: 100.0           # CBF 系数
+          
+          # 自碰撞配置（如果启用）
+        self_collision_config:
+          safety_distance: 0.02  # 安全距离（米）
+          alpha: 100.0            # CBF 系数
+          
+          # 默认障碍物配置（用于动态障碍物）
+        default_obstacle_config:
+          safety_distance: 0.01   # 安全距离（米）
+          obstacle_radius: 0.03  # 障碍物半径（米）
+          ee_radius: 0.03        # 末端执行器半径（米）
+          alpha: 10.0 

@@ -1,0 +1,118 @@
+/**:
+  ros__parameters:    
+    master_arm_controller:
+      # ========================================
+      # 共享控制参数（所有机械臂通用）
+      # ========================================
+      # 仿真模式标志
+      is_simulation: false             # true: 仿真模式（不加电机惯量）, false: 真实机器人（加电机惯量）
+      
+      # 控制频率参数
+      control_publish_rate: 500      # 控制命令发布频率 (Hz)
+      state_publish_rate: 10          # 节点状态发布频率 (Hz)
+      # Teleop 管理器状态话题（用于 suspend 期间禁用力反馈）
+      teleop_manager_state_topic: "/teleop/teleop_manager_state"
+
+      # 主臂力反馈增益（从臂外力估计 × ee_ff_gain → 主臂关节力矩）
+      ee_ff_gain: 0.6
+
+      ee_ff_static_friction_margin: [0.2, 0.2, 0.2, 0.2, 0.2, 0.2]
+      
+      # === 逆运动学求解器配置 ===
+      ik_config:
+        ik_damp: 0.0001                    # 阻尼系数
+        weight_ik: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]  # 位姿权重 [x, y, z, roll, pitch, yaw]
+        ik_iter_max: 100                  # 最大迭代次数
+        ik_dt: 0.2                       # 时间步长
+        singular_values_min: 0.01        # 最小奇异值阈值
+        max_damp: 0.08                    # 最大阻尼系数
+        epsilon: 0.005                    # 收敛阈值
+        ref_joint_penalty: 0.01          # 零空间惩罚权重
+        ref_joint_kp: 1.0                # 参考关节控制增益
+      
+      # === 关节限制参数（仅针对arm的arm_dof个关节）===
+      joint_limits:
+        max_velocity: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]        # 最大速度 (rad/s)
+        max_acceleration: [2.0, 2.0, 2.0, 2.0, 2.0, 2.0]    # 最大加速度 (rad/s²)
+        max_jerk: [5.0, 5.0, 5.0, 5.0, 5.0, 5.0]            # 最大加加速度 (rad/s³)
+      
+      # === 电机参数（仅针对arm的arm_dof个关节）===
+      motor_params:
+        rotor_inertia: [0.00002, 0.00002, 0.00002, 0.0000087, 0.0000087, 0.0000087]  # 电机转子惯量 (kg·m²)
+        gear_ratio: [40.0, 40.0, 40.0, 7.0, 7.0, 7.0]    # 减速比
+      
+      # === Nexus 专用：摩擦补偿参数（独立命名空间，避免被其他机型复用）===
+      nexus_friction:
+        friction_velocity_threshold: 0.02  # (rad/s) 只有当速度绝对值大于此阈值时才应用摩擦补偿
+        friction_tanh_velocity_scale: 1.0 # tanh过渡速度尺度系数：scale 越大过渡越快（越大起步越“轻”，但更可能抖）
+        velocity_sign_history_size: 10     # 速度符号历史队列大小，用于去抖动（队列符号一致才补偿）
+        friction_compensation_gain: [0.9, 0.9, 0.9, 0.0, 0.0, 0.2]    # (0-1) 每关节增益（长度=6）
+        friction_compensation_cartesian_error_threshold_full: 0.01   # (m) 笛卡尔全补偿误差阈值（大于该值全开）
+        friction_compensation_cartesian_error_threshold_zero: 0.002  # (m) 笛卡尔零补偿误差阈值（小于该值全关）
+        # 原有“力反馈抬升过静摩擦”逻辑，默认关闭
+        enable_ee_ff_static_friction_lift: true
+        # 静摩擦方波补偿：静止时施加高频正负方波，幅值 = 库仑摩擦值 × amplitude_scale（每关节可调）
+        static_friction_compensation_amplitude_scale: [0.0, 0.8, 0.8, 0.0, 0.0, 0.0]   # 每关节方波幅值系数
+        static_friction_compensation_frequency: [50.0, 20.0, 20.0, 50.0, 50.0, 50.0]   # 每关节方波频率 (Hz)
+      
+      # === 运动规划类型配置 ===
+      motion_planning_type: 2  # 0: INTERPOLATE (线性插值), 1: SCURVE (S曲线)
+        
+      # === 重力补偿控制参数（用于 TELEOP 状态，允许用户拖动）===
+      # Kp - 位置刚度（较小值，允许位置偏差）
+      gravity_comp_kp: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      
+      # Kd - 速度阻尼（提供阻尼，避免振荡）
+      gravity_comp_kd: [0.1, 0.1, 0.1, 0.6, 0.5, 0.5]
+      
+      # gravity_comp_kp_velocity_threshold - Kp自适应速度阈值 (rad/s)
+      # 当滤波后的速度二范数小于此阈值时，启用设定的Kp；否则Kp置0
+      # 这样可以避免在快速运动时产生过大的位置刚度，允许用户自由拖动
+      gravity_comp_kp_velocity_threshold: 0.05
+      
+      # === 运动规划控制参数（用于 TELEOP_INIT 状态，快速跟踪目标）===
+      # Kp - 位置刚度（较大值，快速响应位置误差）
+      motion_planning_kp: [50.0, 50.0, 60.0, 20.0, 15.0, 10.0]
+      # motion_planning_kp: [20.0, 20.0, 20.0, 10.0, 10.0, 5.0]
+      
+      # Kd - 速度阻尼（避免超调和振荡）
+      # motion_planning_kd: [2.0, 3.0, 2.0, 2.0, 2.0, 0.2]
+      motion_planning_kd: [0.7, 0.7, 0.7, 0.7, 0.7, 0.7]
+      # motion_planning_kd: [0.7, 1.0, 0.6, 0.7, 0.7, 0.7]
+
+      #=== 阻尼控制参数（用于 TELEOP_IDLE TELEOP_FAULT状态，平滑运动）===
+      # Kp - 位置刚度（中等值，平滑位置控制）
+      damping_control_kp: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0] 
+
+      # Kd - 速度阻尼（提供适度阻尼）
+      damping_control_kd: [1.0, 1.0, 1.0, 0.3, 0.1, 0.1]
+
+      # === 笛卡尔空间阻抗控制参数（用于增量遥控模式，定点阻抗弹性模式）===
+      # Kp - 位置/姿态刚度 [x, y, z, roll, pitch, yaw]
+      # cart_imped_kp: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      cart_imped_kp: [50.0, 50.0, 50.0, 5.0, 2.0, 2.0]
+      # cart_imped_kp: [80.0, 80.0, 80.0, 3.5, 0.6, 1.5]  # 20260116
+
+      # Kd - 位置/姿态阻尼 [x, y, z, roll, pitch, yaw]
+      # cart_imped_kd: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      cart_imped_kd: [0.7, 0.7, 0.7, 0.7, 0.9, 0.7]       # 20260116
+      # cart_imped_kd: [5.0, 5.0, 5.0, 0.1, 0.1, 0.1]
+
+      # === 对角化阻尼配置 ===
+      enable_double_diag_damping: true  # 是否启用双对角化阻尼，false时使用常规对角阻尼
+
+      # === PID积分控制参数（消除静态误差）===
+      enable_integral_control: true                              # 是否启用积分控制
+      joint_ki: [20.0, 30.0, 30.0, 35.0, 20.0, 20.0]               # 关节空间积分增益
+      integral_limit: [15.0, 30.0, 15.0, 5.0, 5.0, 5.0]            # 积分力矩限幅（N·m）
+      output_limit: [30.0, 100.0, 30.0, 10.0, 10.0, 10.0]  # PID总输出力矩限幅（N·m）
+
+      # === 关节软限位（虚拟弹簧阻尼力矩叠加）===
+      enable_joint_soft_limit: true
+      soft_limit_lower: [-1.5708, -1.2217, -0.7854, -0.6981, -0.8727, -0.7854]
+      soft_limit_upper: [ 1.5708,  0.6981,  0.5,    2.0944,  0.8727,  3.1416]
+      soft_limit_kp: [15.0, 15.0, 15.0, 4.0, 4.0, 2.0]              # (N·m/rad)
+      soft_limit_kd: [0.8, 0.8, 0.8, 0.4, 0.4, 0.4]                 # (N·m·s/rad)
+      soft_limit_unidirectional_damping: [0, 0, 0, 0, 0, 1]          # 0=双向阻尼, 1=单向阻尼(仅阻碍越限方向)
+      soft_limit_transition_width: [0.1, 0.1, 0.1, 0.2, 0.2, 0.2]   # (rad)
+      soft_limit_tau_max: [6.0, 6.0, 6.0, 0.6, 0.6, 0.3]            # (N·m)

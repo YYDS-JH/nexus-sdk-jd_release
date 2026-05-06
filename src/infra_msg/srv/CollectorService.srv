@@ -1,0 +1,55 @@
+# 数据采集器统一服务接口
+# 通过 command 字段区分不同功能
+
+# ==================== Request ====================
+uint8 command                    # 命令类型
+uint8 CMD_SET_TASK = 1           # 设置采集任务
+uint8 CMD_GET_STATUS = 2         # 获取当前状态
+uint8 CMD_GET_PROGRESS = 3       # 获取采集进度
+
+# ---- CMD_SET_TASK 参数 ----
+string dataset_name              # 数据集名称
+string task_description          # 任务描述
+uint32 num_episodes              # 需要采集的 Episode 数量
+float32 max_episode_duration_s   # 单个 Episode 最大时长 (秒)
+string robot_type                # 机器人类型 (可选)
+uint8 existing_dataset_policy    # 已存在数据集的处理策略
+uint8 POLICY_ERROR = 0
+uint8 POLICY_APPEND = 1
+uint8 POLICY_OVERWRITE = 2
+
+# ---- CMD_GET_STATUS 参数 ----
+bool include_health_details      # 是否包含详细健康信息
+
+---
+
+# ==================== Response ====================
+bool success
+string message
+
+# ---- CMD_SET_TASK 响应 ----
+string dataset_path              # 数据集存储路径
+bool path_writable
+bool name_valid
+bool dataset_exists
+uint32 existing_episodes         # 已存在的 Episode 数量
+
+# ---- CMD_GET_STATUS 响应 ----
+uint8 state                      # 状态机状态
+uint8 STATE_IDLE = 0
+uint8 STATE_READY = 1
+uint8 STATE_RECORDING = 2
+uint8 STATE_FAULT = 3
+string[] unhealthy_topics        # 不健康的 topic 列表
+int32 error_code
+string error_message
+
+# ---- CMD_GET_PROGRESS 响应 ----
+uint32 total_episodes            # 总 Episode 数
+uint32 completed_episodes        # 已完成 Episode 数
+uint32 remaining_episodes        # 剩余 Episode 数
+uint32 current_episode_frames    # 当前 Episode 已采集帧数
+float32 current_episode_duration_s  # 当前 Episode 已采集时长
+float32 max_episode_duration_s   # 单个 Episode 最大时长
+uint64 total_frames_recorded     # 总采集帧数
+string current_dataset_name      # 当前数据集名称

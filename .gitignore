@@ -1,0 +1,15 @@
+devel/
+build/
+install/
+log/
+.cache/
+.vscode/
+.cursor/
+.catkin_workspace
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+*bag

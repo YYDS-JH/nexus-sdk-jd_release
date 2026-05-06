@@ -1,0 +1,46 @@
+/**:
+  ros__parameters:
+    master_robot_cfg:
+      # 与 mujoco_sim config/ar5_mujoco_sim.yaml 中 robot_name 一致 → /ar5/robot/...
+      robot_name: "ar5"
+      # 非 imeta，避免夹爪查表等厂商专用逻辑；无夹爪时 has_gripper 为 false
+      robot_type: "generic"
+      urdf_path: "package://robot_controller/urdf/AR5-5_07L-W4C4A2.urdf"
+      robot_base_frame: "AR5-5_07L-W4C4A2_base"
+      # 仅机械臂 7 轴，无 right_end_effector → 硬件总自由度 = 7
+      model_configuration: ["right_wrist"]
+
+      # ==================== Arm 配置（7-DOF，与 MuJoCo joint 名一致）====================
+      right_wrist:
+        arm_base_frame: "AR5-5_07L-W4C4A2_base"
+        # 与 human_data ar5_human_data_config.yaml 中 right_wrist.end_effector_link 须一致（末端控制用 link7，非 tcp）
+        end_effector_link: "AR5-5_07L-W4C4A2_link7"
+        # Pinocchio 全模型下可动关节索引 0..6（若加载失败请用 pinocchio 打印核对）
+        arm_joint_indices: [0, 1, 2, 3, 4, 5, 6]
+        arm_joint_names:
+          - "AR5-5_07L-W4C4A2_joint_1"
+          - "AR5-5_07L-W4C4A2_joint_2"
+          - "AR5-5_07L-W4C4A2_joint_3"
+          - "AR5-5_07L-W4C4A2_joint_4"
+          - "AR5-5_07L-W4C4A2_joint_5"
+          - "AR5-5_07L-W4C4A2_joint_6"
+          - "AR5-5_07L-W4C4A2_joint_7"
+        arm_init_joint_position: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        arm_init_position_matrix: [
+          1.0, 0.0, 0.0, 0.0,
+          0.0, 1.0, 0.0, 0.0,
+          0.0, 0.0, 1.0, 0.0,
+          0.0, 0.0, 0.0, 1.0
+        ]
+
+    # ==================== ros2 topic（robot_name 前缀由节点拼接）====================
+    joint_mit_control_topic: "/robot/joint_cmd"
+    joint_state_topic: "/robot/joint_states"
+    status_topic: "/robot/arm_status"
+    controller_config_service: "/robot/robot_controller_config"
+    end_effector_state_topic: "/robot/human_data"
+    end_wrench_state_topic: "/robot/end_wrench"
+    end_effector_cmd_topic: "/robot/end_effector_cmd"
+    node_state_topic: "/robot/controller_state"
+    # 与 nexus_manage / 主臂力反馈路由对齐时可改；须与主端发布 topic 一致
+    right_wrist_cartesian_impedance_topic: "/ar5/robot/right_cartesian_impedance"

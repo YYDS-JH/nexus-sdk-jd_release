@@ -1,0 +1,26 @@
+# InferenceConfig.srv
+# 模型推理节点配置服务
+# 用于设置推理节点的运行状态
+
+# ==================== 请求 (Request) ====================
+
+# === 目标状态 ===
+uint8 state
+
+# --- 推理节点状态常量 ---
+uint8 STATE_IDLE = 0
+uint8 STATE_INFERENCE = 1
+uint8 STATE_TAKEOVER = 2
+
+---
+
+# ==================== 响应 (Response) ====================
+
+# === 执行结果 ===
+bool success
+
+# === 错误描述信息 ===
+string error_message
+
+# === 实际设置的状态 ===
+uint8 actual_state

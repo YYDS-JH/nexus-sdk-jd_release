@@ -1,0 +1,5 @@
+/**:
+  ros__parameters:
+    # AR5 从臂无夹爪：master_robot_cfg 不合并 end_effector，此处仅占位，避免缺文件
+    gripper_config:
+      self_role: "slave"
