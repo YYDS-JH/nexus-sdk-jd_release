@@ -76,9 +76,13 @@ public:
     std::string getRobotName() const;
     std::string getTeleopName() const;
     
-    // 获取全局缩放因子
-    double getEEPosScalingFactor() const;
-    double getEEVelScalingFactor() const;
+    // 获取全局缩放因子（三轴独立）
+    double getEEPosScalingFactorX() const;
+    double getEEPosScalingFactorY() const;
+    double getEEPosScalingFactorZ() const;
+    double getEEVelScalingFactorX() const;
+    double getEEVelScalingFactorY() const;
+    double getEEVelScalingFactorZ() const;
     double getEERotScalingFactor() const;
     std::vector<double> getEERpyLimits() const;
     double getGripperScalingFactor() const;

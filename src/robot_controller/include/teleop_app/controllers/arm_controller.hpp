@@ -333,7 +333,8 @@ public:
     void setForceEstDebugPublishers(
         rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr tau_meas_pub,
         rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr tau_model_pub,
-        rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr tau_ext_pub);
+        rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr tau_ext_pub,
+        rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr tau_comp_pub);
 
     /**
      * @brief 设置当前控制周期对应的时间（秒），用于静摩擦方波补偿的相位

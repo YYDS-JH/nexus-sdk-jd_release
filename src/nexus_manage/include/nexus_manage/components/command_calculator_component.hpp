@@ -74,20 +74,24 @@ public:
     void initializeEndEffectorConfigs(const std::vector<EndEffectorConfig>& ee_configs);
     
     /**
-      * @brief  设置 type="ee" 的位置缩放因子（线程安全）
-      * @param  scale  位置缩放因子
+      * @brief  设置 type="ee" 的位置缩放因子（线程安全，三轴独立）
+      * @param  x  X轴位置缩放因子
+      * @param  y  Y轴位置缩放因子
+      * @param  z  Z轴位置缩放因子
       * @retval null
-      * @usage  
+      * @usage
       */
-    void setEEPosScalingFactor(double scale);
-    
+    void setEEPosScalingFactor(double x, double y, double z);
+
     /**
-      * @brief  设置 type="ee" 的速度缩放因子（线程安全）
-      * @param  scale  速度缩放因子
+      * @brief  设置 type="ee" 的速度缩放因子（线程安全，三轴独立）
+      * @param  x  X轴速度缩放因子
+      * @param  y  Y轴速度缩放因子
+      * @param  z  Z轴速度缩放因子
       * @retval null
-      * @usage  
+      * @usage
       */
-    void setEEVelScalingFactor(double scale);
+    void setEEVelScalingFactor(double x, double y, double z);
     
     /**
       * @brief  设置 type="ee" 的旋转缩放因子（线程安全）
@@ -114,20 +118,52 @@ public:
     void setGripperScalingFactor(double scale);
     
     /**
-      * @brief  获取 type="ee" 的位置缩放因子（线程安全）
+      * @brief  获取 type="ee" 的 X 轴位置缩放因子（线程安全）
       * @param  null
-      * @retval 位置缩放因子
-      * @usage  
+      * @retval X轴位置缩放因子
+      * @usage
       */
-    double getEEPosScalingFactor() const;
-    
+    double getEEPosScalingFactorX() const;
+
     /**
-      * @brief  获取 type="ee" 的速度缩放因子（线程安全）
+      * @brief  获取 type="ee" 的 Y 轴位置缩放因子（线程安全）
       * @param  null
-      * @retval 速度缩放因子
-      * @usage  
+      * @retval Y轴位置缩放因子
+      * @usage
       */
-    double getEEVelScalingFactor() const;
+    double getEEPosScalingFactorY() const;
+
+    /**
+      * @brief  获取 type="ee" 的 Z 轴位置缩放因子（线程安全）
+      * @param  null
+      * @retval Z轴位置缩放因子
+      * @usage
+      */
+    double getEEPosScalingFactorZ() const;
+
+    /**
+      * @brief  获取 type="ee" 的 X 轴速度缩放因子（线程安全）
+      * @param  null
+      * @retval X轴速度缩放因子
+      * @usage
+      */
+    double getEEVelScalingFactorX() const;
+
+    /**
+      * @brief  获取 type="ee" 的 Y 轴速度缩放因子（线程安全）
+      * @param  null
+      * @retval Y轴速度缩放因子
+      * @usage
+      */
+    double getEEVelScalingFactorY() const;
+
+    /**
+      * @brief  获取 type="ee" 的 Z 轴速度缩放因子（线程安全）
+      * @param  null
+      * @retval Z轴速度缩放因子
+      * @usage
+      */
+    double getEEVelScalingFactorZ() const;
     
     /**
       * @brief  获取 type="ee" 的旋转缩放因子（线程安全）

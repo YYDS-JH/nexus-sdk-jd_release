@@ -36,6 +36,7 @@ public:
     bool disableMotors() override;
     bool sendMotorCommands(const std::vector<MotorCommand>& commands) override;
     bool readMotorStates(std::vector<MotorState>& states) override;
+    bool readExternalWrench(std::array<double, 6>& wrench) override;
     DeviceStatus getDeviceStatus() const;
     void readThreadFunc() override;
     void writeThreadFunc() override;

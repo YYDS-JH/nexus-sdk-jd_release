@@ -273,8 +273,8 @@
         enable_joint_limit_clamp: true
         # 与 URDF AR5-5_07L-W4C4A2_joint_1..7 的 limit lower/upper 一致（rad）
         joint_limit:
-          min: [-3.1067, -2.0944, -3.1067, 0.2, -3.1067, -0.8472, -0.8472]
-          max: [3.1067, 2.0944, 3.1067, 2.5307, 3.1067, 0.8472, 0.8472]
+          min: [-1.57, -2.0944, -3.1067, 0.2, -3.1067, -0.8472, -0.8472]
+          max: [1.57, 2.0944, 3.1067, 2.5307, 3.1067, 0.8472, 0.8472]
           safety_margin: 0.1
 
       # ══════════════════════════════════════════════════════════════════════
@@ -368,15 +368,19 @@
 
       # --- 动力学外力估计器参数（momentum_observer / delta_momentum / inv_dyn_residual）---
       dynamics_force_estimator:
-        use_motor_inertia: false          # 负载端力矩传感器不含转子惯量 → false
+        use_motor_inertia: false           # 仿真：actuator_force 含转子惯量贡献 → true
         damped_pinv_lambda: 0.01          # 雅可比伪逆正则化
-        momentum_observer_gain: 5.0       # 动量观测器增益 K
+        momentum_observer_gain: 7.0       # 动量观测器增益 K
         delta_momentum_alpha: 0.03        # 差分动量 IIR 滤波系数
         velocity_filter_alpha: 0.1        # inv_dyn_residual: 速度预滤波
         accel_filter_alpha: 0.1           # inv_dyn_residual: 加速度滤波
         output_filter_cutoff_hz: 5.0      # 输出 6D 力低通截止频率 (Hz)
         enable_friction_offset: false
         friction_torque_offset: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        residual_calibration_duration: 120.0
+        residual_calibration_output_path: "scripts/ar5_calib"
+        residual_compensation_enable: false
+        residual_model_path: "src/robot_controller/scripts/ar5_calib/residual_model_ar5.csv"
 
       # --- 虚拟弹簧路径参数（仅 force_estimation_method: virtual_spring 时生效）---
       ee_ff_gain: 0.0                # 0=关闭
@@ -390,6 +394,7 @@
       ee_ff_force_upper_limit: [6.0, 6.0, 6.0, 0.0, 0.0, 0.0]
 
       # --- 发布侧统一保护（所有估计路径共用，在发布前生效）---
-      force_publish_lower_limit: [10.0, 10.0, 10.0, 1.0, 1.0, 1.0]   # 死区 (N, N·m)
-      force_publish_upper_limit: [20.0, 20.0, 20.0, 2.0, 2.0, 2.0] # 饱和 (N, N·m)
+      force_publish_lower_limit: [10.0, 10.0, 10.0, 9999.0, 9999.0, 9999.0]   # 死区 (N, N·m)
+      force_publish_upper_limit: [16.0, 16.0, 16.0, 0.0, 0.0, 0.0] # 饱和 (N, N·m)
       force_publish_velocity_gate: 10.0  # 关节速度范数门控 (rad/s)：‖v‖ ≥ gate 时力置零；0=不启用
+      force_publish_deadzone_hysteresis_ratio: 0.7  # 死区滞回：入死区=lower*ratio，出=lower；0=无滞回硬切换

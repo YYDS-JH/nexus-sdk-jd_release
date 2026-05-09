@@ -17,6 +17,7 @@
  ******************************************************************************/
 #include <string>
 #include <vector>
+#include <array>
 #include <memory>
 #include <thread>
 #include <mutex>
@@ -154,6 +155,9 @@ public:
     
     // 传感器（默认不支持）
     virtual bool readSensorData(SensorData& sensor_data);
+
+    // 外部力/力矩（基坐标系 [Fx,Fy,Fz,Tx,Ty,Tz]，默认不支持）
+    virtual bool readExternalWrench(std::array<double, 6>& wrench);
     
     // 设备管理
     DeviceStatus getDeviceStatus() const;

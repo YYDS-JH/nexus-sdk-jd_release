@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.8)
 project(infra_msg)
 
+# 默认使用 Release 编译模式（-O3 -DNDEBUG）
+# 可通过命令行覆盖：colcon build --cmake-args -DCMAKE_BUILD_TYPE=Debug
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
 find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)

@@ -9,7 +9,7 @@
 #include <Eigen/Dense>
 #include <map>
 
-#include "teleop_app/controllers/ar5_analytical_ik_types.hpp"
+#include "teleop_app/controllers/ik/ar5_analytical_ik_types.hpp"
 
 namespace teleop_app {
 namespace controllers {
@@ -610,6 +610,16 @@ struct Ar5DynamicsForceEstimatorConfig {
     /// 仅在 quasi_static / inv_dyn_residual 路径生效
     bool enable_friction_offset{false};
     std::vector<double> friction_torque_offset{};
+
+    /// 标定采集时长(s)
+    double residual_calibration_duration{30.0};
+    /// 标定CSV输出路径
+    std::string residual_calibration_output_path{"scripts/ar5_calib"};
+
+    /// 残差补偿开关（与硬编码解耦）
+    bool residual_compensation_enable{false};
+    /// 残差模型系数文件路径
+    std::string residual_model_path{""};
 };
 
 /**
@@ -667,6 +677,7 @@ struct ControllerParams {
     std::vector<double> force_publish_lower_limit;  // [6] 死区：|F(i)| < lower → 0 (N, N·m)
     std::vector<double> force_publish_upper_limit;  // [6] 饱和：clamp to ±upper (N, N·m)
     double force_publish_velocity_gate{0.0};        // 关节速度范数门控 (rad/s)：‖v‖ ≥ gate 时力置零；0=不启用
+    double force_publish_deadzone_hysteresis_ratio{0.7}; // 死区滞回：入死区阈值=lower*ratio，出死区阈值=lower；0=无滞回(硬切换)
     double ee_ff_gain{0.0};                             // 主臂：末端力反馈增益，0=关闭
     std::vector<double> ee_ff_static_friction_margin; // 主臂：每关节静摩擦抬升裕量(N·m)，长度=arm_dof
     bool enable_ee_ff_static_friction_lift{false};     // 主臂：是否启用原有“力反馈抬升过静摩擦”逻辑，默认关闭

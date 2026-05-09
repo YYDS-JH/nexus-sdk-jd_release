@@ -9,13 +9,13 @@
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/float64_multi_array.hpp>
 
-#include "teleop_app/controllers/ar5_dynamics_force_estimator.hpp"
+#include "teleop_app/controllers/force_est/ar5_dynamics_force_estimator.hpp"
 #include "teleop_app/controllers/data_types.hpp"
 #include "teleop_app/controllers/gripper_controller.hpp"
 #include "teleop_app/controllers/pid_controller.hpp"
 #include "teleop_app/controllers/polynomial_profile.hpp"
 #include "teleop_app/controllers/post_cbf_joint_reference_filter.hpp"
-#include "teleop_app/controllers/redundant_arm_ik_step.hpp"
+#include "teleop_app/controllers/ik/redundant_arm_ik_step.hpp"
 #include "teleop_app/controllers/robot_model.hpp"
 #include "teleop_app/controllers/s_curve_profile.hpp"
 #include "teleop_app/oscbf/utils/collision_pair_manager.hpp"
@@ -115,6 +115,7 @@ struct ArmController::Impl {
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr debug_force_tau_meas_pub_;
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr debug_force_tau_model_pub_;
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr debug_force_tau_ext_pub_;
+    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr debug_force_tau_comp_pub_;
 
     int velocity_sign_history_size_{10};
     double m_t{0.0};

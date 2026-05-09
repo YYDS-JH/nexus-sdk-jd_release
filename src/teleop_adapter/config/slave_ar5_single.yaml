@@ -24,6 +24,7 @@ slave_arm_adapter:
     joint_mit_control_topic: 'robot/joint_cmd'
     joint_state_topic: 'robot/joint_states'
     status_topic: 'robot/arm_status'
+    external_wrench_topic: 'robot/external_wrench'
 
     # AR5 不使用外设接口
     gripper_key_state_topic: 'robot/gripper_key'
