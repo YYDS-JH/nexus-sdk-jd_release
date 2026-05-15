@@ -61,8 +61,8 @@ _CYCLONEDDS_XML_TEMPLATE = """\
       <MaxAutoParticipantIndex>50</MaxAutoParticipantIndex>
       <!-- 静态 Peer 列表：master 与 slave 机器的 IP -->
       <Peers>
-        <Peer Address="192.168.8.50"/>
-        <Peer Address="192.168.8.53"/>
+        <Peer Address="10.18.20.25"/>
+        <Peer Address="10.18.64.46"/>
       </Peers>
     </Discovery>
     <Internal>

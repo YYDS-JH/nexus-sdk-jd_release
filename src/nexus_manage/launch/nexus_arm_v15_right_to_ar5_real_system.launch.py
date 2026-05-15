@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-主启动文件 - 一键启动整个远程操控系统（Nexus-Arm V18 Left → AR5）
+主启动文件 - 一键启动整个远程操控系统（Nexus-Arm V15 Right → AR5）
 
 用法:
-  ros2 launch nexus_manage nexus_arm_v18_left_to_ar5_real_system.launch.py
-  ros2 launch nexus_manage nexus_arm_v18_left_to_ar5_real_system.launch.py role:=slave
-  ros2 launch nexus_manage nexus_arm_v18_left_to_ar5_real_system.launch.py role:=master
-  ros2 launch nexus_manage nexus_arm_v18_left_to_ar5_real_system.launch.py role:=slave domain_id:=42
-  ros2 launch nexus_manage nexus_arm_v18_left_to_ar5_real_system.launch.py role:=master network_interface:=enp3s0
-  ros2 launch nexus_manage nexus_arm_v18_left_to_ar5_real_system.launch.py role:=slave  network_interface:=eth0
+  ros2 launch nexus_manage nexus_arm_v15_right_to_ar5_real_system.launch.py
+  ros2 launch nexus_manage nexus_arm_v15_right_to_ar5_real_system.launch.py role:=slave
+  ros2 launch nexus_manage nexus_arm_v15_right_to_ar5_real_system.launch.py role:=master
+  ros2 launch nexus_manage nexus_arm_v15_right_to_ar5_real_system.launch.py role:=slave domain_id:=42
+  ros2 launch nexus_manage nexus_arm_v15_right_to_ar5_real_system.launch.py role:=master network_interface:=enp3s0
+  ros2 launch nexus_manage nexus_arm_v15_right_to_ar5_real_system.launch.py role:=slave  network_interface:=eth0
 """
 
 import os
@@ -95,9 +95,9 @@ def launch_setup(context, *args, **kwargs):
     slave_controller_launch = _include('robot_controller', 'slave_single_ar5.launch.py')
 
     nexus_arm_launch = _include('teleop_adapter', 'master_nexus_single.launch.py')
-    nexus_arm_human_data_solver_launch = _include('human_data', 'nexus_arm_v18_left_human_data_solver.launch.py')
+    nexus_arm_human_data_solver_launch = _include('human_data', 'nexus_arm_v15_right_human_data_solver.launch.py')
     master_controller_launch = _include('robot_controller', 'master_single_nexus.launch.py')
-    manager_launch = _include('nexus_manage', 'nexus_nexus-arm_v18_to_ar5_manage.launch.py')
+    manager_launch = _include('nexus_manage', 'nexus_nexus-arm_v15_right_to_ar5_manage.launch.py')
 
     if role == 'slave':
         launch_actions = [

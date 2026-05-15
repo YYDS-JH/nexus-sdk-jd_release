@@ -37,8 +37,8 @@ _CYCLONEDDS_XML_TEMPLATE = """\
       <ParticipantIndex>auto</ParticipantIndex>
       <MaxAutoParticipantIndex>50</MaxAutoParticipantIndex>
       <Peers>
-        <Peer Address="192.168.8.50"/>
-        <Peer Address="192.168.8.53"/>
+        <Peer Address="10.18.20.25"/>
+        <Peer Address="10.18.64.46"/>
       </Peers>
     </Discovery>
     <Internal>

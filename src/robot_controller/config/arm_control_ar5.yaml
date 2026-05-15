@@ -193,8 +193,8 @@
         vqp_arm_angle_ref_joint_positions: [0.0, 0.2, 0.0, 2.0, 0.0, 0.0, 0.0]
         vqp_arm_angle_user_ref: 0.0            # policy=user_specified 时，在参考平面上的额外角度偏置(rad)
         vqp_arm_angle_limit_enable: true
-        vqp_arm_angle_min: -0.3                # 相对参考平面允许的最小臂角(rad)
-        vqp_arm_angle_max: 0.3                 # 相对参考平面允许的最大臂角(rad)
+        vqp_arm_angle_min: -0.6                # 相对参考平面允许的最小臂角(rad)
+        vqp_arm_angle_max: 0.6                 # 相对参考平面允许的最大臂角(rad)
         vqp_arm_angle_limit_gain: 5.0
         vqp_arm_angle_fd_step: 0.0001
         vqp_arm_angle_shoulder_frame: "AR5-5_07L-W4C4A2_link2"
@@ -394,7 +394,27 @@
       ee_ff_force_upper_limit: [6.0, 6.0, 6.0, 0.0, 0.0, 0.0]
 
       # --- 发布侧统一保护（所有估计路径共用，在发布前生效）---
+      # force_publish_lower_limit: [10.0, 10.0, 10.0, 9999.0, 9999.0, 9999.0]   # 死区 (N, N·m)
       force_publish_lower_limit: [10.0, 10.0, 10.0, 9999.0, 9999.0, 9999.0]   # 死区 (N, N·m)
-      force_publish_upper_limit: [16.0, 16.0, 16.0, 0.0, 0.0, 0.0] # 饱和 (N, N·m)
+      force_publish_upper_limit: [11.0, 11.0, 11.0, 0.0, 0.0, 0.0] # 饱和 (N, N·m)
       force_publish_velocity_gate: 10.0  # 关节速度范数门控 (rad/s)：‖v‖ ≥ gate 时力置零；0=不启用
       force_publish_deadzone_hysteresis_ratio: 0.7  # 死区滞回：入死区=lower*ratio，出=lower；0=无滞回硬切换
+      force_publish_lpf_alpha: [0.5, 0.5, 0.5, 1.0, 1.0, 1.0]  # =1.0无滤波，<1.0平滑
+      force_publish_output_lower_limit: [2.0, 2.0, 2.0, 9999.0, 9999.0, 9999.0]  # =lower时无软膝
+
+      # --- IK 工作空间边界虚拟力（仅从臂 SLAVE 生效）---
+      # 当从臂连续 IK 失败达到阈值时，沿 CartesianImpedance 通道发布虚拟弹簧力，
+      # IK 工作空间边界虚拟力：从臂 IK 连续失败时，生成虚拟弹簧力推主臂回可达区域
+      ik_boundary_force:
+        enable: true
+        consecutive_failure_threshold: 10       # 连续 IK 失败 N 次后激活（500Hz 下 10=20ms）
+        recovery_success_threshold: 3           # 连续成功 M 次后退出
+        boundary_kp: [100.0, 100.0, 100.0, 2.0, 2.0, 2.0]   # [N/m, Nm/rad] 弹簧刚度
+        boundary_kd: [100.0, 20.0, 20.0, 0.2, 0.2, 0.2]        # [Ns/m, Nms/rad] 阻尼
+
+        # 边界力独立保护参数（不与力反馈共用，可独立调节手感）
+        velocity_gate: 0.0                                  # 速度门控 (rad/s)：‖v‖ ≥ gate → F=0
+        lower_limit: [1.0, 1.0, 1.0, 0.2, 0.2, 0.2]  # [N, Nm] 死区下限（旋转9999=关闭）
+        upper_limit: [20.0, 16.0, 16.0, 0.5, 0.5, 0.5]      # [N, Nm] 饱和上限
+        deadzone_hysteresis_ratio: 0.7                       # 滞回比例：入=lower*ratio，出=lower
+        lpf_alpha: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1]           # 一阶 IIR LPF 系数，1.0=无滤波

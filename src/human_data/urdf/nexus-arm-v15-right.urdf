@@ -1,0 +1,506 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="nexus-arm-v15-right">
+  <link
+    name="base_link">
+    <inertial>
+      <origin
+        xyz="-0.00197698722128624 -0.000492342913367603 0.0500491361482781"
+        rpy="0 0 0" />
+      <mass
+        value="1.33721444594961" />
+      <inertia
+        ixx="0.000849323768733214"
+        ixy="-3.80684496393461E-07"
+        ixz="1.28551949125857E-05"
+        iyy="0.000797667090311515"
+        iyz="-3.52081763779148E-07"
+        izz="0.00127090853090879" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://Tele-arm-right.SLDASM/meshes/base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://Tele-arm-right.SLDASM/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="link1_Link">
+    <inertial>
+      <origin
+        xyz="-5.21242967001583E-05 -0.00593260853459529 0.0304373930218112"
+        rpy="0 0 0" />
+      <mass
+        value="0.11105324566573" />
+      <inertia
+        ixx="0.000103596673780388"
+        ixy="2.19417850405545E-08"
+        ixz="-2.9092418562229E-07"
+        iyy="0.000117034564079504"
+        iyz="-1.76365632671195E-05"
+        izz="6.12169870143224E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://Tele-arm-right.SLDASM/meshes/link1_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://Tele-arm-right.SLDASM/meshes/link1_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="link1_Joint"
+    type="revolute">
+    <origin
+      xyz="-0.00060482 0 0.13105"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="link1_Link" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-1.57"
+      upper="1.57"
+      effort="3.5"
+      velocity="12.566" />
+  </joint>
+  <link
+    name="link2_Link">
+    <inertial>
+      <origin
+        xyz="0.000220495029659322 0.0305499563825582 0.0525790783244139"
+        rpy="0 0 0" />
+      <mass
+        value="0.817693429930293" />
+      <inertia
+        ixx="0.00050192541944252"
+        ixy="-3.08979895757816E-07"
+        ixz="2.10754894581346E-07"
+        iyy="0.0005927983295608"
+        iyz="1.24427388634983E-08"
+        izz="0.000259636560247491" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://Tele-arm-right.SLDASM/meshes/link2_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://Tele-arm-right.SLDASM/meshes/link2_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="link2_Joint"
+    type="revolute">
+    <origin
+      xyz="-2.3691E-05 -0.014493 0.06"
+      rpy="0 0 0" />
+    <parent
+      link="link1_Link" />
+    <child
+      link="link2_Link" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-1.22"
+      upper="0.7"
+      effort="9"
+      velocity="3.77" />
+  </joint>
+  <link
+    name="link3_Link">
+    <inertial>
+      <origin
+        xyz="0.0239126131990965 0.0466171681778615 -6.41310657428784E-06"
+        rpy="0 0 0" />
+      <mass
+        value="1.75399504489588" />
+      <inertia
+        ixx="0.00202372443501326"
+        ixy="0.000797111825337852"
+        ixz="-3.47756931711166E-06"
+        iyy="0.00287298826588332"
+        iyz="-1.87249256246166E-06"
+        izz="0.00195328842198331" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://Tele-arm-right.SLDASM/meshes/link3_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://Tele-arm-right.SLDASM/meshes/link3_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="link3_Joint"
+    type="revolute">
+    <origin
+      xyz="0 0.00425 0.11"
+      rpy="0 0 0" />
+    <parent
+      link="link2_Link" />
+    <child
+      link="link3_Link" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-0.79"
+      upper="1.4"
+      effort="3.5"
+      velocity="12.566" />
+  </joint>
+  <link
+    name="link4_Link">
+    <inertial>
+      <origin
+        xyz="-0.107366115695697 -5.70167825253433E-05 -0.0796882603793698"
+        rpy="0 0 0" />
+      <mass
+        value="0.283402486350328" />
+      <inertia
+        ixx="0.000262869673859393"
+        ixy="4.06039943633796E-08"
+        ixz="0.000269123584196713"
+        iyy="0.000614832271981402"
+        iyz="8.30179857047617E-08"
+        izz="0.000448852979309945" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://Tele-arm-right.SLDASM/meshes/link4_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://Tele-arm-right.SLDASM/meshes/link4_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="link4_Joint"
+    type="revolute">
+    <origin
+      xyz="-0.10999 0.01025 0"
+      rpy="0 0 0" />
+    <parent
+      link="link3_Link" />
+    <child
+      link="link4_Link" />
+    <axis
+      xyz="1 0 0" />
+    <limit
+      lower="-1.22"
+      upper="4.36"
+      effort="0.8"
+      velocity="15.708" />
+  </joint>
+  <link
+    name="link5_Link">
+    <inertial>
+      <origin
+        xyz="-0.024187011495538 -0.0891246652040424 0.058577513052109"
+        rpy="0 0 0" />
+      <mass
+        value="0.313095244504967" />
+      <inertia
+        ixx="0.00046002416969404"
+        ixy="7.53302352778985E-05"
+        ixz="-5.90908939490134E-05"
+        iyy="0.000292499595631829"
+        iyz="-0.000183870345222244"
+        izz="0.000340041317511104" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://Tele-arm-right.SLDASM/meshes/link5_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://Tele-arm-right.SLDASM/meshes/link5_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="link5_Joint"
+    type="revolute">
+    <origin
+      xyz="-0.14939 0 -0.07391"
+      rpy="0 0 0" />
+    <parent
+      link="link4_Link" />
+    <child
+      link="link5_Link" />
+    <axis
+      xyz="-0.38268 0 0.92388" />
+    <limit
+      lower="-4.36"
+      upper="1.22"
+      effort="0.8"
+      velocity="15.708" />
+  </joint>
+  <link
+    name="link6_Link">
+    <inertial>
+      <origin
+        xyz="0.0213217926935074 0.131793131967546 -0.000874089050007604"
+        rpy="0 0 0" />
+      <mass
+        value="0.346703008063088" />
+      <inertia
+        ixx="0.000595786821001276"
+        ixy="0.000118205912237256"
+        ixz="-5.77316266950473E-06"
+        iyy="0.000109073985700297"
+        iyz="-1.27685608352969E-05"
+        izz="0.000627005492195408" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://Tele-arm-right.SLDASM/meshes/link6_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://Tele-arm-right.SLDASM/meshes/link6_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="link6_Joint"
+    type="revolute">
+    <origin
+      xyz="-0.030615 -0.08 0.07391"
+      rpy="0 0 0" />
+    <parent
+      link="link5_Link" />
+    <child
+      link="link6_Link" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-1.61"
+      upper="3.97"
+      effort="0.8"
+      velocity="15.708" />
+  </joint>
+  <link
+    name="gripper_Link">
+    <inertial>
+      <origin
+        xyz="0.0135073787167068 0.0101676695933561 -0.00603377772374769"
+        rpy="0 0 0" />
+      <mass
+        value="0.0203179842649809" />
+      <inertia
+        ixx="3.8042462322504E-06"
+        ixy="1.7505002824193E-06"
+        ixz="-1.60777131847696E-06"
+        iyy="4.63829360106312E-06"
+        iyz="-1.19342335265817E-06"
+        izz="5.1046796505071E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://Tele-arm-right.SLDASM/meshes/gripper_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://Tele-arm-right.SLDASM/meshes/gripper_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="gripper_Joint"
+    type="revolute">
+    <origin
+      xyz="0.032764 0.17274 0.0177"
+      rpy="0 0 -1.5708" />
+    <parent
+      link="link6_Link" />
+    <child
+      link="gripper_Link" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-0.35"
+      upper="0"
+      effort="0.8"
+      velocity="15.708" />
+  </joint>
+  <link
+    name="force_Link">
+    <inertial>
+      <origin
+        xyz="-1.41147649124207E-11 0.0799999999999982 -3.84019482879694E-11"
+        rpy="0 0 0" />
+      <mass
+        value="0.0001135" />
+      <inertia
+        ixx="4.72916666666668E-10"
+        ixy="-2.31488822181412E-26"
+        ixz="7.41677518472587E-27"
+        iyy="4.72916666666668E-10"
+        iyz="2.08959431077767E-26"
+        izz="4.72916666666668E-10" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://Tele-arm-right.SLDASM/meshes/force_Link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.698039215686274 0.698039215686274 0.698039215686274 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://Tele-arm-right.SLDASM/meshes/force_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="force_Joint"
+    type="fixed">
+    <origin
+      xyz="0 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="link6_Link" />
+    <child
+      link="force_Link" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+</robot>

@@ -623,6 +623,27 @@ struct Ar5DynamicsForceEstimatorConfig {
 };
 
 /**
+ * @brief IK 工作空间边界虚拟力配置
+ *
+ * 当从臂连续 IK 失败达到阈值时，通过 CartesianImpedance 通道发布虚拟弹簧力，
+ * 将主臂推回可到达工作空间。仅 ArmRole::SLAVE 生效。
+ */
+struct IkBoundaryForceConfig {
+    bool enable{false};
+    int consecutive_failure_threshold{10};   // 连续失败 N 次后激活
+    int recovery_success_threshold{3};       // 连续成功 M 次后退出
+    std::vector<double> boundary_kp;         // [6] 弹簧刚度 (N/m, Nm/rad)
+    std::vector<double> boundary_kd;         // [6] 速度阻尼 (Ns/m, Nms/rad)
+
+    // 边界力独立保护参数（不与力反馈共用）
+    double velocity_gate{0.0};                      // 速度门控 (rad/s)：‖v‖ ≥ gate → F=0
+    std::vector<double> lower_limit;                // [6] 死区下限 (N, Nm)
+    std::vector<double> upper_limit;                // [6] 饱和上限 (N, Nm)
+    double deadzone_hysteresis_ratio{0.7};          // 滞回比例：入=lower*ratio，出=lower
+    std::vector<double> lpf_alpha;                   // [6] 边界力一阶 IIR LPF 系数，1.0=无滤波
+};
+
+/**
  * @brief 控制器参数配置
  */
 struct ControllerParams {
@@ -678,6 +699,9 @@ struct ControllerParams {
     std::vector<double> force_publish_upper_limit;  // [6] 饱和：clamp to ±upper (N, N·m)
     double force_publish_velocity_gate{0.0};        // 关节速度范数门控 (rad/s)：‖v‖ ≥ gate 时力置零；0=不启用
     double force_publish_deadzone_hysteresis_ratio{0.7}; // 死区滞回：入死区阈值=lower*ratio，出死区阈值=lower；0=无滞回(硬切换)
+    std::vector<double> force_publish_lpf_alpha;  // [6] 正常力反馈一阶 IIR LPF 系数，1.0=无滤波
+    std::vector<double> force_publish_output_lower_limit;  // [6] 映射后输出下限，退出死区时从该值起始 (N, Nm)
+    std::vector<double> force_feedback_extra_kd;         // [arm_dof] 力反馈/边界力非零时附加到 cmd.kd 的阻尼
     double ee_ff_gain{0.0};                             // 主臂：末端力反馈增益，0=关闭
     std::vector<double> ee_ff_static_friction_margin; // 主臂：每关节静摩擦抬升裕量(N·m)，长度=arm_dof
     bool enable_ee_ff_static_friction_lift{false};     // 主臂：是否启用原有“力反馈抬升过静摩擦”逻辑，默认关闭
@@ -800,6 +824,8 @@ struct ControllerParams {
 
     /// 动力学外力估计器（与虚拟弹簧并列，默认关闭）
     Ar5DynamicsForceEstimatorConfig dynamics_force_estimator{};
+    /// IK 工作空间边界虚拟力
+    IkBoundaryForceConfig ik_boundary_force{};
 };
 
 /**

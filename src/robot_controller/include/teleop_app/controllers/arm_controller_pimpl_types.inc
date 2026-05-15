@@ -1,8 +1,10 @@
 #pragma once
 
 #include <array>
+#include <atomic>
 #include <deque>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 #include <Eigen/Dense>
@@ -86,6 +88,16 @@ struct ArmController::Impl {
 
     RedundantArmIkRuntimeState redundant_arm_ik_runtime_;
     PostCbfJointReferenceFilter post_cbf_joint_ref_filter_;
+
+    // IK 工作空间边界虚拟力
+    std::atomic<int> consecutive_ik_failures_{0};
+    std::atomic<int> consecutive_ik_successes_{0};
+    std::atomic<bool> ik_boundary_active_{false};
+    mutable std::mutex ik_boundary_mutex_;
+    Eigen::VectorXd last_valid_ik_joint_position_;
+    double ik_boundary_activation_time_{-1.0};
+    mutable Eigen::Matrix<double, 6, 1> boundary_force_filtered_{Eigen::Matrix<double, 6, 1>::Zero()};
+    mutable bool boundary_filter_initialized_{false};
 
     Eigen::VectorXd friction_coulomb_{Eigen::VectorXd::Zero(0)};
     Eigen::VectorXd filtered_velocity_{Eigen::VectorXd::Zero(0)};

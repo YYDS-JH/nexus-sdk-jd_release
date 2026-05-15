@@ -342,6 +342,30 @@ public:
      */
     void setCurrentControlTimeSec(double t_sec);
 
+    /**
+     * @brief 查询 IK 边界虚拟力是否激活
+     */
+    bool isIkBoundaryActive() const;
+
+    /**
+     * @brief 获取连续 IK 失败次数
+     */
+    int getConsecutiveIkFailures() const;
+
+    /**
+     * @brief 计算 IK 工作空间边界虚拟力
+     *
+     * 当从臂 IK 连续失败时，以最后有效 IK 解的末端位姿为锚点，
+     * 生成虚拟弹簧力将期望位姿拉回可到达区域。
+     *
+     * @param current_joint_state 当前关节状态
+     * @param desired_pose 触发失败的期望位姿 T_des
+     * @return 世界系 6D 虚拟边界力
+     */
+    CartesianForce computeIkBoundaryForce(
+        const JointState& current_joint_state,
+        const Eigen::Matrix4d& desired_pose) const;
+
 private:
     struct Impl;
     std::unique_ptr<Impl> impl_;

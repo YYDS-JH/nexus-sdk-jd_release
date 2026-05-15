@@ -64,6 +64,10 @@
       
       # Kd - 速度阻尼（提供阻尼，避免振荡）
       gravity_comp_kd: [0.1, 0.1, 0.1, 0.6, 0.5, 0.5]
+
+      # 力反馈激活时附加关节阻尼（仅主臂 MODE_SCALING/forceFeedback 生效）
+      # 力反馈或边界力非零时叠加到 cmd.kd，为零时自动解除
+      force_feedback_extra_kd: [0.5, 0.8, 0.8, 0.2, 0.2, 0.2]
       
       # gravity_comp_kp_velocity_threshold - Kp自适应速度阈值 (rad/s)
       # 当滤波后的速度二范数小于此阈值时，启用设定的Kp；否则Kp置0
