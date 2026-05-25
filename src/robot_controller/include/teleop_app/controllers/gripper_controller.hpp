@@ -83,6 +83,18 @@ public:
     bool isInitialized() const;
 
     /**
+     * @brief 检查是否为 AR5 吸盘型夹爪
+     * @return true 表示直接将收到的 gripper 原始值作为 pos 透传，不做任何转换
+     */
+    bool isAr5SuctionCup() const;
+
+    /**
+     * @brief 检查是否为 AR5 夹爪（gripper 或 suction_cup）
+     * @return true 表示直接将收到的 gripper 原始值作为 pos 透传，不做任何转换
+     */
+    bool isAr5Gripper() const;
+
+    /**
      * @brief 查表：从旋转角度查找归一化开合度（真实机器人）
      * @param motor_angle 旋转电机角度 (rad)
      * @param role 主臂或从臂标识

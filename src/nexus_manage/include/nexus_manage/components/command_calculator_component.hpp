@@ -108,15 +108,38 @@ public:
       * @usage  
       */
     void setEERpyLimits(const std::vector<double>& limits);
+
+    /**
+      * @brief  设置 type="ee" 的 base frame 绕Z轴旋转角度（线程安全）
+      * @param  deg  旋转角度(度)，绕Z轴逆时针为正
+      * @retval null
+      */
+    void setEEBaseFrameRotationZDeg(double deg);
     
     /**
       * @brief  设置 type="gripper" 的缩放因子（线程安全）
       * @param  scale  缩放因子
       * @retval null
-      * @usage  
+      * @usage
       */
     void setGripperScalingFactor(double scale);
-    
+
+    /**
+      * @brief  设置 gripper 值的符号翻转（线程安全）
+      * @param  flip  true 时 gripper 输出值取反
+      * @retval null
+      * @usage
+      */
+    void setGripperSignFlip(bool flip);
+
+    /**
+      * @brief  获取 gripper 符号翻转状态（线程安全）
+      * @param  null
+      * @retval 是否翻转符号
+      * @usage
+      */
+    bool getGripperSignFlip() const;
+
     /**
       * @brief  获取 type="ee" 的 X 轴位置缩放因子（线程安全）
       * @param  null

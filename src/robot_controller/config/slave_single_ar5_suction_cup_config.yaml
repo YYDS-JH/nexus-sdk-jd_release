@@ -1,0 +1,53 @@
+/**:
+  ros__parameters:
+    master_robot_cfg:
+      # AR5 吸盘版 — 7-DOF arm + 1-DOF suction cup (revolute, unit=rad)
+      robot_name: "ar5"
+      robot_type: "ar5_suction_cup"
+      urdf_path: "package://robot_controller/urdf/AR5_suction_cup.urdf"
+      robot_base_frame: "AR5-5_07L-W4C4A2_base"
+      model_configuration: ["right_wrist", "right_end_effector"]
+
+      # ==================== Arm 配置（7-DOF，与 MuJoCo joint 名一致）====================
+      right_wrist:
+        arm_base_frame: "AR5-5_07L-W4C4A2_base"
+        end_effector_link: "AR5-5_07L-W4C4A2_link7"
+        arm_joint_indices: [0, 1, 2, 3, 4, 5, 6]
+        arm_joint_names:
+          - "AR5-5_07L-W4C4A2_joint_1"
+          - "AR5-5_07L-W4C4A2_joint_2"
+          - "AR5-5_07L-W4C4A2_joint_3"
+          - "AR5-5_07L-W4C4A2_joint_4"
+          - "AR5-5_07L-W4C4A2_joint_5"
+          - "AR5-5_07L-W4C4A2_joint_6"
+          - "AR5-5_07L-W4C4A2_joint_7"
+        arm_init_joint_position: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        arm_init_position_matrix: [
+          1.0, 0.0, 0.0, 0.0,
+          0.0, 1.0, 0.0, 0.0,
+          0.0, 0.0, 1.0, 0.0,
+          0.0, 0.0, 0.0, 1.0
+        ]
+
+      # ==================== Suction Cup 配置 ====================
+      right_end_effector:
+        type: "gripper"
+        end_effector_base: "AR5-5_07L-W4C4A2_link7"
+        end_effector_dof: 1
+        end_effector_joint_indices: [7]
+        end_effector_joint_names: ["AR5-5_07L-W4C4A2_joint_suction_cup"]
+        end_effector_init_position: [0.0]
+
+    # ==================== ros2 topic（robot_name 前缀由节点拼接）====================
+    joint_mit_control_topic: "/robot/joint_cmd"
+    joint_state_topic: "/robot/joint_states"
+    status_topic: "/robot/arm_status"
+    controller_config_service: "/robot/robot_controller_config"
+    end_effector_state_topic: "/robot/human_data"
+    end_wrench_state_topic: "/robot/end_wrench"
+    end_effector_cmd_topic: "/robot/end_effector_cmd"
+    node_state_topic: "/robot/controller_state"
+    right_wrist_cartesian_impedance_topic: "/ar5_suction_cup/robot/right_cartesian_impedance"
+
+    # ==================== Simulation mode ====================
+    is_simulation: true

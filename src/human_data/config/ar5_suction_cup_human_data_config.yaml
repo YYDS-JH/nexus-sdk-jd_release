@@ -1,0 +1,33 @@
+/**:
+  ros__parameters:
+    robot_name: "ar5"
+    robot_type: "ar5_suction_cup"
+    urdf_path: "package://human_data/urdf/AR5-5_07L-W4C4A2.urdf"
+    robot_base_frame: "AR5-5_07L-W4C4A2_base"
+    model_configuration: ["right_wrist", "right_end_effector"]
+    publish_rate: 200.0  # 发布频率(Hz)
+
+    # ==================== configuration ====================
+    model_configs:
+      right_wrist:
+        type: "ee"
+        base_link: "AR5-5_07L-W4C4A2_base"
+        end_effector_link: "AR5-5_07L-W4C4A2_link7"
+        joint_indices: [0, 1, 2, 3, 4, 5, 6]
+        joint_names: ["AR5-5_07L-W4C4A2_joint_1", "AR5-5_07L-W4C4A2_joint_2", "AR5-5_07L-W4C4A2_joint_3", "AR5-5_07L-W4C4A2_joint_4", "AR5-5_07L-W4C4A2_joint_5", "AR5-5_07L-W4C4A2_joint_6", "AR5-5_07L-W4C4A2_joint_7"]
+        base_position_matrix: [1.0, 0.0, 0.0, 0.0,
+                                    0.0, 1.0, 0.0, 0.0,
+                                    0.0, 0.0, 1.0, 0.0,
+                                    0.0, 0.0, 0.0, 1.0]
+      # 吸盘：mujoco_sim 发布 JointState[7] 为吸盘旋转角(rad)，GripperSolver 透传
+      right_end_effector:
+        type: "gripper"
+        joint_indices: [7]
+        joint_names: ["AR5-5_07L-W4C4A2_joint_suction_cup"]
+
+    # ==================== ros2 topic ====================
+    joint_state_topic: "/robot/joint_states"
+
+    human_data_topic: "/robot/human_data"
+
+    pedal_state_topic: "/robot/pedal_state"

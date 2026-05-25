@@ -27,7 +27,10 @@ public:
                   const std::string& local_ip,
                   const std::array<double, AR5_DOF>& init_joint_positions = {
                       0, 0.52359877559829887307710723054658312, 0, 1.0471975511965977461542144610931662, 0,
-                      1.5707963267948966192313216916397514, 0});
+                      1.5707963267948966192313216916397514, 0},
+                  double load_mass = 0,
+                  const std::array<double, 3>& load_cog = {},
+                  const std::array<double, 3>& load_inertia = {});
     ~Ar5ArmAdapter() override;
 
     bool deviceHandshake() override;

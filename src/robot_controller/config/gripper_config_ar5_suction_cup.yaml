@@ -1,0 +1,30 @@
+/**:
+  ros__parameters:
+    gripper_config:
+      # === 吸盘参数（AR5 suction cup — revolute joint, rad↔rad 线性映射）===
+      self_role: "slave"
+
+      # 吸盘 revolute joint 范围 [-1.5708, 1.5708] rad
+      # GripperController 线性映射：rad × 1000 → "mm" → normalize → denormalize → ÷1000 → rad
+      slave_max_opening_distance: 1570.8    # max angle × 1000 (≈ 1.5708 rad × 1000)
+      slave_min_opening_distance: -1570.8   # min angle × 1000
+
+      # MJCF 使用 motor actuator，但 bridge 做 MIT bypass（ctrl=pos_des 直驱）
+      # 与夹爪版同理，kp/kd 在 bridge 层无效
+      kp: 0.0
+      kd: 0.0
+
+      # 无滤波
+      target_angle_filter_alpha: 1.0
+
+      # 吸盘无夹持力反馈 FSM
+      force_feedback_use_fsm: false
+
+      # 每步最大角度变化 (rad)
+      max_gripper_delta: 0.3
+
+      # 仅低速时启用 delta 限幅
+      max_gripper_delta_velocity_threshold: 15.0
+
+      # 速度差限幅 Kd
+      kd_velocity_limit: 10.0

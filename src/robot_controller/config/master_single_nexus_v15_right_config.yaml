@@ -1,0 +1,46 @@
+/**:
+  ros__parameters:
+    master_robot_cfg:
+      robot_name: "nexus_arm_master"
+      robot_type: "nexus"
+      urdf_path: "package://robot_controller/urdf/nexus-arm-v15-right.urdf"
+      robot_base_frame: "base_link"
+      model_configuration: ["right_wrist", "right_end_effector"]
+
+      # ==================== configuration ====================
+      # ==================== Arm 配置（6-DOF）====================
+      right_wrist:
+        arm_base_frame: "base_link"
+        # end_effector_link: "gripper_base_link"
+        end_effector_link: "force_Link"
+        arm_joint_indices: [0, 1, 2, 3, 4, 5]
+        arm_joint_names: ["link1_Joint", "link2_Joint", "link3_Joint", "link4_Joint", "link5_Joint", "link6_Joint"]
+        arm_init_joint_position: [0.0, -0.8, 0.45, 0.3, 0.13, 0.37]
+        arm_init_position_matrix: [
+          1.0, 0.0, 0.0, 0.0,   # row 0: X-axis direction + X translation
+          0.0, 1.0, 0.0, 0.0,   # row 1: Y-axis direction + Y translation
+          0.0, 0.0, 1.0, 0.0,   # row 2: Z-axis direction + Z translation
+          0.0, 0.0, 0.0, 1.0    # row 3: homogeneous coordinates
+        ]
+
+      # ==================== End-effector 配置（Gripper 1-DOF）====================
+      right_end_effector:
+        type: "gripper"
+        name: "gripper"
+        end_effector_base: "link6_Link"
+        end_effector_dof: 1
+        end_effector_joint_indices: [6]
+        end_effector_joint_names: ["gripper_Joint"]
+        end_effector_init_position: [0.0]   # 硬件驱动层自由度1维，初始位置0.0
+
+    # ==================== ros2 topic ====================
+    joint_mit_control_topic: "/teleop/joint_cmd"
+    joint_state_topic: "/teleop/joint_states"
+    status_topic: "/teleop/arm_status"
+    # 其他 topic
+    controller_config_service: "/teleop/teleop_controller_config"
+    end_effector_state_topic: "/teleop/human_data"
+    end_wrench_state_topic: "/teleop/end_wrench"
+    end_effector_cmd_topic: "/teleop/end_effector_cmd"
+    node_state_topic: "/teleop/controller_state"
+    right_wrist_cartesian_impedance_topic: "/ar5/robot/right_cartesian_impedance"

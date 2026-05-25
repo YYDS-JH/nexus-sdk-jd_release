@@ -96,7 +96,7 @@ def launch_setup(context, *args, **kwargs):
 
     nexus_arm_launch = _include('teleop_adapter', 'master_nexus_single.launch.py')
     nexus_arm_human_data_solver_launch = _include('human_data', 'nexus_arm_v15_right_human_data_solver.launch.py')
-    master_controller_launch = _include('robot_controller', 'master_single_nexus.launch.py')
+    master_controller_launch = _include('robot_controller', 'master_single_nexus_v15_right.launch.py')
     manager_launch = _include('nexus_manage', 'nexus_nexus-arm_v15_right_to_ar5_manage.launch.py')
 
     if role == 'slave':

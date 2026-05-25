@@ -5,20 +5,23 @@ Loads configuration from slave_ar5_single.yaml and starts the driver node.
 AR5 uses Rokae SDK torque control with MIT formula conversion.
 """
 
+import os
+
 from launch import LaunchDescription
+from launch.actions import SetEnvironmentVariable
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
-import os
 
 
 def generate_launch_description():
-    # Get the package directory
-    pkg_dir = get_package_share_directory('teleop_adapter')
+    pkg_share = get_package_share_directory('teleop_adapter')
+    pkg_lib = os.path.normpath(os.path.join(pkg_share, '..', '..', 'lib'))
 
-    # Path to the configuration file
-    config_file = os.path.join(pkg_dir, 'config', 'slave_ar5_single.yaml')
+    config_file = os.path.join(pkg_share, 'config', 'slave_ar5_single.yaml')
 
-    # AR5 Arm Driver Node
+    existing_ld = os.environ.get('LD_LIBRARY_PATH', '')
+    ld_path = pkg_lib + ':' + existing_ld if existing_ld else pkg_lib
+
     ar5_arm_driver_node = Node(
         package='teleop_adapter',
         executable='teleop_arm_driver_main',
@@ -26,7 +29,8 @@ def generate_launch_description():
         output='screen',
         emulate_tty=True,
         parameters=[config_file],
-        arguments=['--ros-args', '--log-level', 'info']
+        arguments=['--ros-args', '--log-level', 'info'],
+        additional_env={'LD_LIBRARY_PATH': ld_path},
     )
 
     return LaunchDescription([

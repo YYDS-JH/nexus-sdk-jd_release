@@ -67,7 +67,7 @@ def generate_launch_description():
             PathJoinSubstitution([
                 FindPackageShare('robot_controller'),
                 'launch',
-                'master_single_nexus.launch.py'
+                'master_single_nexus_v15_right.launch.py'
             ])
         ])
     )

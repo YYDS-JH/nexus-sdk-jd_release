@@ -84,9 +84,13 @@ public:
     double getEEVelScalingFactorY() const;
     double getEEVelScalingFactorZ() const;
     double getEERotScalingFactor() const;
+    double getEEBaseFrameRotationZDeg() const;
     std::vector<double> getEERpyLimits() const;
     double getGripperScalingFactor() const;
-    
+
+    // 是否允许 marker_key 切换 gripper 值正负号（吸盘角度控制）
+    bool getGripperSignFlipEnabled() const;
+
     // 获取状态机更新频率
     double getStateMachineRate() const;
     

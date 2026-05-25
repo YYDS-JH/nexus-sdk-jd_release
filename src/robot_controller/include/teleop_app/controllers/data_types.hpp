@@ -703,6 +703,7 @@ struct ControllerParams {
     std::vector<double> force_publish_output_lower_limit;  // [6] 映射后输出下限，退出死区时从该值起始 (N, Nm)
     std::vector<double> force_feedback_extra_kd;         // [arm_dof] 力反馈/边界力非零时附加到 cmd.kd 的阻尼
     double ee_ff_gain{0.0};                             // 主臂：末端力反馈增益，0=关闭
+    double ee_ff_rotation_z_deg{0.0};                  // 力反馈绕Z轴旋转角度（度），补偿场景坐标系偏移
     std::vector<double> ee_ff_static_friction_margin; // 主臂：每关节静摩擦抬升裕量(N·m)，长度=arm_dof
     bool enable_ee_ff_static_friction_lift{false};     // 主臂：是否启用原有“力反馈抬升过静摩擦”逻辑，默认关闭
 

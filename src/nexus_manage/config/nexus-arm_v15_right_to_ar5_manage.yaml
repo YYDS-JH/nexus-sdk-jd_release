@@ -16,6 +16,7 @@
     ee_vel_scaling_factor_y: 1.0
     ee_vel_scaling_factor_z: 1.0
     ee_rot_scaling_factor: 1.0
+    ee_base_frame_rotation_z_deg: 90.0
     ee_rpy_limits: [-1.308997, 1.308997, 0.0, 0.0, 0.0, 0.0]
     gripper_scaling_factor: 1.0
 

@@ -17,6 +17,7 @@
     ee_vel_scaling_factor_y: 1.1
     ee_vel_scaling_factor_z: 1.1
     ee_rot_scaling_factor: 1.2
+    ee_base_frame_rotation_z_deg: 0.0
     # type="ee" 的旋转 RPY 限幅 [r_min, r_max, p_min, p_max, y_min, y_max] (rad)
     # 若某角上下限均为 0，则该角不做限制
     ee_rpy_limits: [-1.308997, 1.308997, 0.0, 0.0, 0.0, 0.0]

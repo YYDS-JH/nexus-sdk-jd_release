@@ -16,8 +16,9 @@
     ee_vel_scaling_factor_y: 1.1
     ee_vel_scaling_factor_z: 1.1
     ee_rot_scaling_factor: 1.2
+    ee_base_frame_rotation_z_deg: 0.0
     ee_rpy_limits: [-1.308997, 1.308997, 0.0, 0.0, 0.0, 0.0]
-    gripper_scaling_factor: 0.2857
+    gripper_scaling_factor: 0.159
 
     # ==================== 末端执行器配置 ====================
     end_effector_configs:

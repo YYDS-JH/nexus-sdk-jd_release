@@ -59,7 +59,7 @@ endif()
 
 # Export for downstream packages
 ament_export_include_directories(include)
-ament_export_libraries(serial_port device_adapter teleop_arm_adapter y1_arm_adapter ar5_arm_adapter teleop_arm_driver_node)
+ament_export_libraries(serial_port device_adapter teleop_arm_adapter ar5_arm_adapter teleop_arm_driver_node)
 ament_export_dependencies(rclcpp std_msgs sensor_msgs infra_msg ament_index_cpp)
 
 ament_package()
