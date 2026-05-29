@@ -167,6 +167,13 @@ public:
       */
     bool isServiceAvailable(double timeout_sec = 1.0);
 
+    /**
+      * @brief  切换服务到新的名称（用于多从臂动态切换）
+      * @param  new_service_name  新的服务名称
+      * @retval null
+      */
+    void switchService(const std::string& new_service_name);
+
 private:
     rclcpp::Node::SharedPtr node_;
     rclcpp::Client<ControllerConfigSrv>::SharedPtr client_;

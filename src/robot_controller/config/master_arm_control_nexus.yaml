@@ -5,7 +5,7 @@
       # 共享控制参数（所有机械臂通用）
       # ========================================
       # 仿真模式标志
-      is_simulation: false             # true: 仿真模式（不加电机惯量）, false: 真实机器人（加电机惯量）
+      is_simulation: true             # true: 仿真模式（不加电机惯量）, false: 真实机器人（加电机惯量）
       
       # 控制频率参数
       control_publish_rate: 500      # 控制命令发布频率 (Hz)
@@ -15,6 +15,8 @@
 
       # 主臂力反馈增益（从臂外力估计 × ee_ff_gain → 主臂关节力矩）
       ee_ff_gain: 0.0
+      # 力反馈 xy 旋转由从臂 publish 前完成（ee_ff_rotation_z_auto）；主臂此处保持 0，避免双重旋转
+      # ee_ff_rotation_z_deg: 0.0
 
       ee_ff_static_friction_margin: [0.2, 0.2, 0.2, 0.2, 0.2, 0.2]
       

@@ -47,7 +47,7 @@
     end_wrench_state_topic: "/robot/end_wrench"
     end_effector_cmd_topic: "/robot/end_effector_cmd"
     node_state_topic: "/robot/controller_state"
-    right_wrist_cartesian_impedance_topic: "/ar5_gripper/robot/right_cartesian_impedance"
+    right_wrist_cartesian_impedance_topic: "/robot/right_cartesian_impedance"
 
     # ==================== Simulation mode ====================
     is_simulation: true

@@ -235,9 +235,23 @@ public:
       * @brief  检查是否有新的推理指令
       * @param  null
       * @retval 是否有新指令
-      * @usage  
+      * @usage
       */
     bool hasNewInferenceCmd() const;
+
+    /**
+      * @brief  执行挂起的机器人切换（由 PositionHoldState::on_entry 调用）
+      * @param  null
+      * @retval null
+      * @usage
+      */
+    void executePendingSwitch();
+
+    void advanceBootSelfCheckToPhase2();
+    bool isBootSelfCheckPhase2() const;
+
+    bool hasPendingRobotSwitch() const;
+    void clearPendingRobotSwitch();
 
 private:
     struct Impl;

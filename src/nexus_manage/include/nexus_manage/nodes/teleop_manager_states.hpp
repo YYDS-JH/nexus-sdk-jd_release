@@ -54,6 +54,7 @@ namespace Events {
     const std::string FAULT_CLEAR = "fault_clear";
     const std::string INFERENCE_ENTER = "inference_enter";
     const std::string INFERENCE_EXIT = "inference_exit";
+    const std::string ROBOT_SWITCH = "robot_switch";
 }
 
 /**
@@ -98,13 +99,17 @@ private:
     std::shared_ptr<TeleopManagerNode> node_;
     rclcpp::Time entry_time_;
     bool self_check_passed_{false};
+    bool capture_done_{false};
+    bool idle_sent_for_switch_{false};
     
     // 自检步骤函数
     bool checkConfiguration();
     bool checkControllerServices();
+    bool checkTeleopData();
     bool checkControllerStates();
     bool checkHumanDataMessages();
     bool checkEndEffectorData();
+    void captureSlaveJointPositions();
 };
 
 /**

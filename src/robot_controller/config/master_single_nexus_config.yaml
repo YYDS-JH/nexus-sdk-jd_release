@@ -43,4 +43,4 @@
     end_wrench_state_topic: "/teleop/end_wrench"
     end_effector_cmd_topic: "/teleop/end_effector_cmd"
     node_state_topic: "/teleop/controller_state"
-    right_wrist_cartesian_impedance_topic: "/ar5/robot/right_cartesian_impedance"
+    right_wrist_cartesian_impedance_topic: "/robot/right_cartesian_impedance"

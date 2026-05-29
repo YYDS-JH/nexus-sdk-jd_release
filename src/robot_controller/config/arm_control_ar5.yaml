@@ -383,9 +383,10 @@
         residual_model_path: "src/robot_controller/scripts/ar5_calib/residual_model_ar5.csv"
 
       # --- 虚拟弹簧路径参数（仅 force_estimation_method: virtual_spring 时生效）---
-      ee_ff_gain: 0.0                # 0=关闭
-      # 力反馈绕 Z 轴旋转角度（补偿场景坐标系偏移，AR5 场景 xy 平面旋转 90°）
-      ee_ff_rotation_z_deg: 90.0
+      ee_ff_gain: 0.0                # 0=关闭（从臂仅估计并发布力，不本地施加）
+      # 力反馈 xy 方向：从臂 publish 前绕 Z 旋转，与主臂操作坐标系对齐（见 docs/ee_force_feedback_rotation_guide.md）
+      ee_ff_rotation_z_auto: true   # 复位时从 robot_pos_values[0]（wrist j1）自动推导 ±90°
+      ee_ff_rotation_z_deg: 0.0      # auto=false 时的手动值；auto=true 时复位后覆盖
       ee_ff_delta_threshold: [0.03, 0.03, 0.03, 0.05, 0.05, 0.05]
       ee_ff_delta_hold_time: [0.1, 0.1, 0.1, 0.1, 0.08, 0.08]
       ee_ff_velocity_threshold: [0.05, 0.05, 0.05, 0.05, 0.05, 0.05]
@@ -408,7 +409,7 @@
       # 当从臂连续 IK 失败达到阈值时，沿 CartesianImpedance 通道发布虚拟弹簧力，
       # IK 工作空间边界虚拟力：从臂 IK 连续失败时，生成虚拟弹簧力推主臂回可达区域
       ik_boundary_force:
-        enable: true
+        enable: false
         consecutive_failure_threshold: 10       # 连续 IK 失败 N 次后激活（500Hz 下 10=20ms）
         recovery_success_threshold: 3           # 连续成功 M 次后退出
         boundary_kp: [100.0, 100.0, 100.0, 2.0, 2.0, 2.0]   # [N/m, Nm/rad] 弹簧刚度

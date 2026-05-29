@@ -62,7 +62,15 @@ public:
       * @usage  
       */
     bool updateResetPositions();
-    
+
+    /**
+      * @brief  设置指定末端执行器的从臂复位位置
+      * @param  name 末端执行器名称
+      * @param  values 从臂关节位置值
+      * @usage  由 BootSelfCheck Phase 2 捕获从臂当前位置后调用
+      */
+    void setRobotPosValues(const std::string& name, const std::vector<double>& values);
+
     const std::vector<EndEffectorConfig>& getEndEffectorConfigs() const;
     
     /**

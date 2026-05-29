@@ -4,9 +4,9 @@
 """
 
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 
 
@@ -20,7 +20,8 @@ def generate_launch_description():
                 'launch',
                 'slave_y1_single.launch.py'
             ])
-        ])
+        ]),
+        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
     )
 
     # 2. Nexus-Arm Launch
@@ -31,7 +32,8 @@ def generate_launch_description():
                 'launch',
                 'master_nexus_single.launch.py'
             ])
-        ])
+        ]),
+        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
     )
 
 
@@ -43,7 +45,8 @@ def generate_launch_description():
                 'launch',
                 'y1_human_data_solver.launch.py'
             ])
-        ])
+        ]),
+        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
     )
 
     nexus_arm_human_data_solver_launch = IncludeLaunchDescription(
@@ -53,7 +56,8 @@ def generate_launch_description():
                 'launch',
                 'nexus_arm_v05_human_data_solver.launch.py'
             ])
-        ])
+        ]),
+        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
     )
     
     # 3. Gripper Keyboard Launch
@@ -64,7 +68,8 @@ def generate_launch_description():
                 'launch',
                 'nexus-arm_left_gripper.launch.py'
             ])
-        ])
+        ]),
+        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
     )
     
     # 4. Robot Controller Launch - Master (Nexus-Arm)
@@ -75,7 +80,8 @@ def generate_launch_description():
                 'launch',
                 'master_single_nexus.launch.py'
             ])
-        ])
+        ]),
+        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
     )
     
     # 5. Robot Controller Launch - Slave (Y1)
@@ -86,7 +92,8 @@ def generate_launch_description():
                 'launch',
                 'slave_single_y1.launch.py'
             ])
-        ])
+        ]),
+        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
     )
     
     # 6. Nexus Manage Launch
@@ -97,10 +104,17 @@ def generate_launch_description():
                 'launch',
                 'nexus_nexus-arm_v05_to_y1_manage.launch.py'
             ])
-        ])
+        ]),
+        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
     )
     
     return LaunchDescription([
+        DeclareLaunchArgument(
+            'robot_id',
+            default_value='',
+            description='Optional prefix for node name to avoid conflicts'
+        ),
+
         # 启动所有组件（按依赖顺序）
         y1_arm_launch,           # Y1 仿真器
         nexus_arm_launch,   # Nexus-Arm 仿真器
@@ -111,3 +125,4 @@ def generate_launch_description():
         slave_controller_launch,  # Slave 控制器 (Y1)
         manager_launch,          # Nexus-Arm to Y1 管理器
     ])
+

@@ -6,7 +6,7 @@ master_nexus_adapter:
     adapter_type: "teleop"   # "teleop" 或 "y1"
     # right_arm parameters: configuration for the right robotic arm
 
-    right_arm_port: '/dev/nexus_arm'
+    right_arm_port: '/dev/ttyACM0'
 
     right_arm_feedback_rate: 500
     right_arm_num_of_dofs: 7

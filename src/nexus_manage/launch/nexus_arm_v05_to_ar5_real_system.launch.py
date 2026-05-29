@@ -96,18 +96,22 @@ def _write_cyclonedds_config(network_interface: str = 'auto') -> str:
     return tmp.name
 
 
-def _include(package, launch_file):
+def _include(package, launch_file, launch_arguments=None):
+    kwargs = {}
+    if launch_arguments:
+        kwargs['launch_arguments'] = launch_arguments.items()
     return IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             PathJoinSubstitution([FindPackageShare(package), 'launch', launch_file])
-        ])
+        ]),
+        **kwargs
     )
-
-
 def launch_setup(context, *args, **kwargs):
     role = LaunchConfiguration('role').perform(context).strip().lower()
     domain_id = LaunchConfiguration('domain_id').perform(context).strip()
     network_interface = LaunchConfiguration('network_interface').perform(context).strip()
+    robot_id = LaunchConfiguration('robot_id').perform(context).strip()
+    launch_args = {'robot_id': robot_id} if robot_id else None
 
     cyclonedds_xml_path = _write_cyclonedds_config(network_interface)
 
@@ -119,15 +123,15 @@ def launch_setup(context, *args, **kwargs):
     ]
 
     # ── Slave 侧组件 ──────────────────────────────────────────────────────────
-    ar5_arm_launch = _include('teleop_adapter', 'slave_ar5_single.launch.py')
-    ar5_human_data_solver_launch = _include('human_data', 'ar5_human_data_solver.launch.py')
-    slave_controller_launch = _include('robot_controller', 'slave_single_ar5.launch.py')
+    ar5_arm_launch = _include('teleop_adapter', 'slave_ar5_single.launch.py', launch_args)
+    ar5_human_data_solver_launch = _include('human_data', 'ar5_human_data_solver.launch.py', launch_args)
+    slave_controller_launch = _include('robot_controller', 'slave_single_ar5.launch.py', launch_args)
 
     # ── Master 侧组件 ─────────────────────────────────────────────────────────
-    nexus_arm_launch = _include('teleop_adapter', 'master_nexus_single.launch.py')
-    nexus_arm_human_data_solver_launch = _include('human_data', 'nexus_arm_v05_human_data_solver.launch.py')
-    master_controller_launch = _include('robot_controller', 'master_single_nexus.launch.py')
-    manager_launch = _include('nexus_manage', 'nexus_nexus-arm_v05_to_ar5_manage.launch.py')
+    nexus_arm_launch = _include('teleop_adapter', 'master_nexus_single.launch.py', launch_args)
+    nexus_arm_human_data_solver_launch = _include('human_data', 'nexus_arm_v05_human_data_solver.launch.py', launch_args)
+    master_controller_launch = _include('robot_controller', 'master_single_nexus.launch.py', launch_args)
+    manager_launch = _include('nexus_manage', 'nexus_nexus-arm_v05_to_ar5_manage.launch.py', launch_args)
 
     if role == 'slave':
         launch_actions = [
@@ -159,6 +163,12 @@ def launch_setup(context, *args, **kwargs):
 
 def generate_launch_description():
     return LaunchDescription([
+        DeclareLaunchArgument(
+            'robot_id',
+            default_value='',
+            description='Optional prefix for node name to avoid conflicts'
+        ),
+
         DeclareLaunchArgument(
             'role',
             default_value='',
