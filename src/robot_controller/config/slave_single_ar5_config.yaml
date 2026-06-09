@@ -43,4 +43,4 @@
     end_effector_cmd_topic: "/robot/end_effector_cmd"
     node_state_topic: "/robot/controller_state"
     # 与 nexus_manage / 主臂力反馈路由对齐时可改；须与主端发布 topic 一致
-    right_wrist_cartesian_impedance_topic: "/robot/right_cartesian_impedance"
+    right_wrist_cartesian_impedance_topic: "/ar5/robot/right_cartesian_impedance"

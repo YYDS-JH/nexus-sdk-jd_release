@@ -4,9 +4,9 @@
 """
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 
 
@@ -20,9 +20,8 @@ def generate_launch_description():
                 'launch',
                 'y1_dual_sim.launch.py'
             ])
-        ]),
-        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
-        )
+        ])
+    )
     
     # 2. Human Data Solver Launch
     solver_launch = IncludeLaunchDescription(
@@ -32,9 +31,8 @@ def generate_launch_description():
                 'launch',
                 'dual_human_data_solver.launch.py'
             ])
-        ]),
-        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
-        )
+        ])
+    )
     
     # 3. Gripper Keyboard Launch
     gripper_launch = IncludeLaunchDescription(
@@ -44,9 +42,8 @@ def generate_launch_description():
                 'launch',
                 'left_gripper.launch.py'
             ])
-        ]),
-        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
-        )
+        ])
+    )
     
     # 4. Nexus Manage Launch
     manager_launch = IncludeLaunchDescription(
@@ -56,9 +53,8 @@ def generate_launch_description():
                 'launch',
                 'nexus_manage.launch.py'
             ])
-        ]),
-        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
-        )
+        ])
+    )
     
     # 5. Master Arm Single Launch
     master_arm_launch = IncludeLaunchDescription(
@@ -68,9 +64,8 @@ def generate_launch_description():
                 'launch',
                 'master_y1_single.launch.py'
             ])
-        ]),
-        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
-        )
+        ])
+    )
     
     # 6. Slave Arm Single Launch
     slave_arm_launch = IncludeLaunchDescription(
@@ -80,17 +75,10 @@ def generate_launch_description():
                 'launch',
                 'slave_y1_single.launch.py'
             ])
-        ]),
-        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
-        )
+        ])
+    )
     
     return LaunchDescription([
-        DeclareLaunchArgument(
-            'robot_id',
-            default_value='',
-            description='Optional prefix for node name to avoid conflicts'
-        ),
-
         # 启动所有组件（按依赖顺序）
         sim_launch,           # 仿真器
         solver_launch,        # Human Data Solver

@@ -190,6 +190,7 @@
         vqp_arm_angle_weight: 0.03
         vqp_arm_angle_kp: 1.5
         vqp_arm_angle_ref_policy: user_specified        # q_ref / initial / user_specified
+        # 启动 fallback；系统复位后由 nexus_manage robot_pos_values 覆盖（见 docs/ee_force_feedback_rotation_guide.md）
         vqp_arm_angle_ref_joint_positions: [-1.57, 0.2, 0.0, 2.0, 0.0, 0.0, 0.0]
         vqp_arm_angle_user_ref: 0.0            # policy=user_specified 时，在参考平面上的额外角度偏置(rad)
         vqp_arm_angle_limit_enable: true
@@ -409,7 +410,7 @@
       # 当从臂连续 IK 失败达到阈值时，沿 CartesianImpedance 通道发布虚拟弹簧力，
       # IK 工作空间边界虚拟力：从臂 IK 连续失败时，生成虚拟弹簧力推主臂回可达区域
       ik_boundary_force:
-        enable: false
+        enable: true
         consecutive_failure_threshold: 10       # 连续 IK 失败 N 次后激活（500Hz 下 10=20ms）
         recovery_success_threshold: 3           # 连续成功 M 次后退出
         boundary_kp: [100.0, 100.0, 100.0, 2.0, 2.0, 2.0]   # [N/m, Nm/rad] 弹簧刚度

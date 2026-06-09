@@ -1,55 +1,78 @@
 #!/usr/bin/env python3
 """
-Launch file.
+双臂控制系统启动文件（仅控制层）
+
+启动：
+- arm_control_node (控制层)
+
+使用新架构配置文件 master_arm_config.yaml
+
+Usage:
+  ros2 launch teleop_app dual_arm_system.launch.py
 """
 
-import os
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, OpaqueFunction
-from launch.substitutions import LaunchConfiguration
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
-from ament_index_python.packages import get_package_share_directory
-
-
-def launch_setup(context, *args, **kwargs):
-    robot_id = LaunchConfiguration('robot_id').perform(context).strip()
-    base_name = 'master_arm_control'
-    node_name = f'{robot_id}_{base_name}' if robot_id else base_name
-
-    log_level = LaunchConfiguration('log_level').perform(context)
-
-    pkg_share = get_package_share_directory('robot_controller')
-    robot_config = os.path.join(pkg_share, 'config', 'master_single_y1_config.yaml')
-    controller_config = os.path.join(pkg_share, 'config', 'arm_control_y1.yaml')
-    gripper_config = os.path.join(pkg_share, 'config', 'gripper_config_y1.yaml')
-
-    params = [robot_config, controller_config, gripper_config]
-    if robot_id:
-        params.append({'master_robot_cfg.robot_name': robot_id})
-
-    node = Node(
-        package='robot_controller',
-        executable='arm_control_node',
-        name=node_name,
-        output='screen',
-        parameters=params,
-        arguments=['--ros-args', '--log-level', log_level],
-        respawn=False,
-    )
-    return [node]
+from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-    return LaunchDescription([
-        DeclareLaunchArgument(
-            'robot_id',
-            default_value='',
-            description='Optional prefix for node name to avoid conflicts'
-        ),
-        DeclareLaunchArgument(
-            'log_level',
-            default_value='info',
-            description='Log level (debug, info, warn, error, fatal)'
-        ),
-        OpaqueFunction(function=launch_setup),
+    
+    robot_controller_share = FindPackageShare('robot_controller')
+    
+    # ========== Declare Launch Arguments ==========
+    
+    declare_log_level = DeclareLaunchArgument(
+        'log_level',
+        default_value='info',
+        description='Log level (debug, info, warn, error, fatal)'
+    )
+    
+    # ========== Configuration Files ==========
+    
+    # 机器人结构配置（URDF路径、关节配置、话题等）
+    robot_config = PathJoinSubstitution([
+        robot_controller_share,
+        'config',
+        'master_single_y1_config.yaml'
     ])
+    
+    # 控制器参数配置（Kp/Kd增益、控制频率等）
+    controller_config = PathJoinSubstitution([
+        robot_controller_share,
+        'config',
+        'arm_control_y1.yaml'
+    ])
+    
+    # 夹爪配置参数
+    gripper_config = PathJoinSubstitution([
+        robot_controller_share,
+        'config',
+        'gripper_config_y1.yaml'
+    ])
+    
+    # ========== Launch Nodes ==========
+    
+    # Arm Control Node（控制层）
+    arm_control_node = Node(
+        package='robot_controller',
+        executable='arm_control_node',
+        name='master_arm_control',
+        output='screen',
+        parameters=[
+            robot_config,       # 机器人结构配置
+            controller_config, # 控制器参数配置
+            gripper_config     # 夹爪配置参数
+        ],
+        arguments=['--ros-args', '--log-level', LaunchConfiguration('log_level')],
+        respawn=False,
+    )
+    
+    return LaunchDescription([
+        declare_log_level,
+        arm_control_node,
+    ])
+
+

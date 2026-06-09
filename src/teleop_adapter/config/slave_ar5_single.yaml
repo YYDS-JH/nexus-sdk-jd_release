@@ -22,6 +22,14 @@ slave_arm_adapter:
     right_arm_load_cog: [0.0, 0.0, 0.0] # 质心 [x, y, z], m
     right_arm_load_inertia: [0.0, 0.0, 0.0] # 惯量 [ix, iy, iz], kg·m²
 
+    # 实时力控参数（可选，不设置则使用适配器默认值）
+    # 滤波截止频率 [关节位置, 笛卡尔位置, 关节力矩], 单位Hz
+    right_arm_filter_frequency: [10.0, 10.0, 10.0]
+    # 各轴摩擦力补偿系数, 范围[0,1], 默认0.9, 值越小补偿越弱
+    right_arm_fc_friction: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+    # 各轴力控带宽, 范围[0,60], 默认20
+    right_arm_fc_gain: [30.0, 30.0, 30.0, 30.0, 30.0, 30.0, 30.0]
+
     # whether to enable robotic arm
     auto_enable: true
 

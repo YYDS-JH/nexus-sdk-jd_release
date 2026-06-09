@@ -47,6 +47,7 @@ string error_message
 # ---- CMD_GET_PROGRESS 响应 ----
 uint32 total_episodes            # 总 Episode 数
 uint32 completed_episodes        # 已完成 Episode 数
+uint32 marked_episodes           # 已完成且被 marker 标记（失败）的 Episode 数
 uint32 remaining_episodes        # 剩余 Episode 数
 uint32 current_episode_frames    # 当前 Episode 已采集帧数
 float32 current_episode_duration_s  # 当前 Episode 已采集时长

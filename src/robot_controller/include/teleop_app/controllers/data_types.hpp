@@ -704,8 +704,7 @@ struct ControllerParams {
     std::vector<double> force_feedback_extra_kd;         // [arm_dof] 力反馈/边界力非零时附加到 cmd.kd 的阻尼
     double ee_ff_gain{0.0};                             // 主臂：末端力反馈增益，0=关闭
     double ee_ff_rotation_z_deg{0.0};                  // 力反馈绕Z轴旋转角度（度），补偿场景坐标系偏移
-    /// 从臂：true 时根据 wrist 1 关节复位角自动推导 ee_ff_rotation_z_deg（复位后覆盖 YAML）
-    bool ee_ff_rotation_z_auto{false};
+    bool ee_ff_rotation_z_auto{false};                 // 从臂：true 时根据 wrist 1 关节复位角自动推导 ee_ff_rotation_z_deg
     std::vector<double> ee_ff_static_friction_margin; // 主臂：每关节静摩擦抬升裕量(N·m)，长度=arm_dof
     bool enable_ee_ff_static_friction_lift{false};     // 主臂：是否启用原有“力反馈抬升过静摩擦”逻辑，默认关闭
 
@@ -739,7 +738,9 @@ struct ControllerParams {
     std::vector<double> cbf_inner_joint_impedance_kd{};
 
     // 对角化阻尼配置
-    bool enable_double_diag_damping;  // 是否启用双对角化阻尼（获得常定阻尼比动态）
+    bool enable_double_diag_damping_joint{false};      // 关节空间是否启用双对角化阻尼
+    bool enable_double_diag_damping_cartesian{false};  // 笛卡尔空间是否启用双对角化阻尼
+    bool enable_nonlinear_compensation{true};          // 非线性补偿开关（仅影响 computeIncrementalSpringControl 中的 g(q)+C(q,v)*v）
     
     // PID积分控制参数（用于消除静态误差）
     bool enable_integral_control;           // 是否启用积分控制
@@ -747,14 +748,20 @@ struct ControllerParams {
     std::vector<double> integral_limit;     // 积分力矩限幅（N·m，arm_dof个）
     std::vector<double> output_limit;  // PID总输出力矩限幅（N·m，arm_dof个）
 
+    /// Nexus 主臂：发布 MIT 指令前对 feedforward_torque 对称限幅（与 teleop_adapter 驱动 ±30 对齐）
+    bool enable_mit_feedforward_torque_limit{false};
+    std::vector<double> mit_feedforward_torque_limit{};  // arm_dof，单位 N·m
+    double mit_feedforward_torque_limit_gripper{-1.0};   // 夹爪前馈限幅，<0 表示不单独配置
+
     // 新增：摩擦补偿和自适应Kp参数
     // 注意：这些字段必须有安全默认值/默认行为，否则在未从 YAML/参数服务器加载时会导致力矩计算异常（抖动/坠落）。
-    double friction_velocity_threshold{0.04};             // 摩擦补偿速度阈值 (rad/s)
-    int velocity_sign_history_size{10};                   // 符号历史队列大小
+    std::vector<double> friction_velocity_threshold{};       // 每关节摩擦补偿速度阈值 (rad/s)，长度=arm_dof
+    std::vector<int> velocity_sign_history_size{};           // 每关节速度符号历史队列大小，长度=arm_dof
     double friction_tanh_velocity_scale{1.0};             // tanh过渡速度尺度系数：scale 越大过渡越快（tanh(|v| * scale / v_th)）
     std::vector<double> friction_compensation_gain{};     // 每关节摩擦补偿增益（长度=arm_dof，空=全0）
-    double friction_compensation_cartesian_error_threshold_full{0.01}; // 笛卡尔全补偿误差阈值 (m)
-    double friction_compensation_cartesian_error_threshold_zero{0.002}; // 笛卡尔零补偿误差阈值 (m)
+    std::string friction_coulomb_file{};                  // 库仑摩擦参数文件路径（package://格式），空则回退到硬编码路径
+    std::vector<double> velocity_filter_alphas{};          // 每关节速度低通滤波系数（0~1），长度=arm_dof，空则默认0.485
+    std::vector<double> friction_compensation_position_error_threshold{}; // 每关节位置误差阈值（长度=arm_dof，空=统一用0.01）
     // 静摩擦方波补偿：当不满足动摩擦补偿条件时视为静止，施加高频正负方波，幅值 = F_c * amplitude_scale（每关节）
     std::vector<double> static_friction_compensation_amplitude_scale{};  // 每关节方波幅值系数（长度=arm_dof）
     std::vector<double> static_friction_compensation_frequency{};       // 每关节方波频率 (Hz)（长度=arm_dof）

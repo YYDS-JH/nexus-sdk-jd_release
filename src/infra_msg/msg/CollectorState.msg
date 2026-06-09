@@ -16,7 +16,11 @@ string dataset_name
 # 简要进度 (详细进度通过服务查询)
 uint32 total_episodes
 uint32 completed_episodes
+uint32 marked_episodes          # 已完成且被 marker 标记（失败）的 episode 数
 uint32 remaining_episodes
+
+# 最近一次完成的 episode 实际用时（秒）；无新完成时为 0
+float32 last_completed_episode_duration_s
 
 # 错误信息 (仅在 FAULT 状态有效)
 int32 error_code

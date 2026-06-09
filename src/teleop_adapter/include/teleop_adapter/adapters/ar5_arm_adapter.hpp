@@ -30,7 +30,12 @@ public:
                       1.5707963267948966192313216916397514, 0},
                   double load_mass = 0,
                   const std::array<double, 3>& load_cog = {},
-                  const std::array<double, 3>& load_inertia = {});
+                  const std::array<double, 3>& load_inertia = {},
+                  const std::array<double, 3>& filter_frequency = {10.0, 10.0, 10.0},
+                  const std::array<double, AR5_DOF>& fc_friction =
+                      {0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1},
+                  const std::array<double, AR5_DOF>& fc_gain =
+                      {30, 30, 30, 30, 30, 30, 30});
     ~Ar5ArmAdapter() override;
 
     bool deviceHandshake() override;

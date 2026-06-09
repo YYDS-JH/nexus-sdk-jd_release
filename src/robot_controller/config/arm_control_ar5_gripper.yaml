@@ -190,6 +190,7 @@
         vqp_arm_angle_weight: 0.03
         vqp_arm_angle_kp: 1.5
         vqp_arm_angle_ref_policy: user_specified        # q_ref / initial / user_specified
+        # 启动 fallback；系统复位后由 nexus_manage robot_pos_values 覆盖
         vqp_arm_angle_ref_joint_positions: [-1.57, 0.2, 0.0, 2.0, 0.0, 0.0, 0.0]
         vqp_arm_angle_user_ref: 0.0            # policy=user_specified 时，在参考平面上的额外角度偏置(rad)
         vqp_arm_angle_limit_enable: true
@@ -384,9 +385,8 @@
 
       # --- 虚拟弹簧路径参数（仅 force_estimation_method: virtual_spring 时生效）---
       ee_ff_gain: 0.0                # 0=关闭（从臂仅估计并发布力，不本地施加）
-      # 力反馈 xy 方向：从臂 publish 前绕 Z 旋转，与主臂操作坐标系对齐（见 docs/ee_force_feedback_rotation_guide.md）
-      ee_ff_rotation_z_auto: true   # 复位时从 robot_pos_values[0]（wrist j1）自动推导 ±90°
-      ee_ff_rotation_z_deg: 0.0      # auto=false 时的手动值；auto=true 时复位后覆盖
+      ee_ff_rotation_z_auto: true
+      ee_ff_rotation_z_deg: 0.0
       ee_ff_delta_threshold: [0.03, 0.03, 0.03, 0.05, 0.05, 0.05]
       ee_ff_delta_hold_time: [0.1, 0.1, 0.1, 0.1, 0.08, 0.08]
       ee_ff_velocity_threshold: [0.05, 0.05, 0.05, 0.05, 0.05, 0.05]
