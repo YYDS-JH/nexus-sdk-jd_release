@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-跨网段启动文件 — Nexus-Arm V18 Right → AR5 Suction Cup
+跨网段启动文件 — Nexus-Arm V18 Right → AR5
 
 通过路由器 NAT 端口转发实现跨子网 DDS 通信。
 参考 dds-test/src/dds_multi_node_test 的多节点跨网段方案。
 
 用法:
-  ros2 launch nexus_manage nexus_arm_v18_right_to_ar5_suction_cup_real_system_cross_subnet.launch.py
-  ros2 launch nexus_manage nexus_arm_v18_right_to_ar5_suction_cup_real_system_cross_subnet.launch.py role:=slave
-  ros2 launch nexus_manage nexus_arm_v18_right_to_ar5_suction_cup_real_system_cross_subnet.launch.py role:=master
+  ros2 launch nexus_manage nexus_arm_v18_right_to_ar5_real_system_cross_subnet.launch.py
+  ros2 launch nexus_manage nexus_arm_v18_right_to_ar5_real_system_cross_subnet.launch.py role:=slave
+  ros2 launch nexus_manage nexus_arm_v18_right_to_ar5_real_system_cross_subnet.launch.py role:=master
 
 端口规则 (ParticipantIndex=auto, DomainGain=0):
   Participant port = _PORT_BASE + ParticipantIndex
@@ -30,12 +30,12 @@ from launch_ros.substitutions import FindPackageShare
 _DOMAIN_ID = '18'
 
 # Master 侧（外网，Nexus-Arm 端）
-_MASTER_NETWORK_INTERFACE = "enp0s31f6"
-_MASTER_EXTERNAL_IP = "192.168.8.74"
+_MASTER_NETWORK_INTERFACE = "wlp3s0"
+_MASTER_EXTERNAL_IP = "10.18.20.42"
 
 # Slave 侧（AGV 内网，AR5 端）
 _SLAVE_NETWORK_INTERFACE = "wlp3s0"
-_SLAVE_EXTERNAL_IP = "10.18.21.12"
+_SLAVE_EXTERNAL_IP = "10.18.20.42"
 
 # DDS 端口基数（主从共用）
 _PORT_BASE = 7000
@@ -52,13 +52,13 @@ _MASTER_NODES = [
     ('teleop_adapter',   'master_nexus_single.launch.py'),
     ('human_data',       'nexus_arm_v18_right_human_data_solver.launch.py'),
     ('robot_controller', 'master_single_nexus.launch.py'),
-    ('nexus_manage',     'nexus_nexus-arm_v18_to_ar5_suction_cup_manage.launch.py'),
+    ('nexus_manage',     'nexus_nexus-arm_v18_to_ar5_manage.launch.py'),
 ]
 
 _SLAVE_NODES = [
-    ('teleop_adapter',   'slave_ar5_suction_cup_single.launch.py'),
-    ('human_data',       'ar5_suction_cup_human_data_solver.launch.py'),
-    ('robot_controller', 'slave_single_ar5_suction_cup.launch.py'),
+    ('teleop_adapter',   'slave_ar5_single.launch.py'),
+    ('human_data',       'ar5_human_data_solver.launch.py'),
+    ('robot_controller', 'slave_single_ar5.launch.py'),
 ]
 
 # ═══════════════════════════════════════════════════════════════════════════════

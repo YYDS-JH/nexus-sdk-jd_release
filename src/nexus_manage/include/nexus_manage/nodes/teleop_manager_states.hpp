@@ -125,6 +125,10 @@ public:
 
 private:
     std::shared_ptr<TeleopManagerNode> node_;
+    bool robot_idle_requested_{false};
+    bool teleop_idle_requested_{false};
+    rclcpp::Time entry_time_;
+    rclcpp::Time last_retry_time_;
 };
 
 /**
