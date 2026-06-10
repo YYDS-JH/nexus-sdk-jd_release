@@ -43,4 +43,5 @@
     end_wrench_state_topic: "/teleop/end_wrench"
     end_effector_cmd_topic: "/teleop/end_effector_cmd"
     node_state_topic: "/teleop/controller_state"
+    # 从臂发布、主臂订阅；各 AR5 变体（含 08L/吸盘/夹爪）共用此 topic
     right_wrist_cartesian_impedance_topic: "/ar5/robot/right_cartesian_impedance"

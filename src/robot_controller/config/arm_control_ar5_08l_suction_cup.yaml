@@ -2,10 +2,10 @@
   ros__parameters:
     master_arm_controller:
       # =============================================================================
-      # AR5-5_07L-W4C4A2 从臂 / 仿真用控制参数（7 转动关节，无夹爪）
+      # AR5-5_08L-W4C4A6-ZY2 从臂（08L + 吸盘） / 仿真用控制参数（7 转动关节，无夹爪）
       #
-      # 关节顺序：与 URDF 中 AR5-5_07L-W4C4A2_joint_1 … joint_7 一致（Pinocchio 全模型索引 0..6）。
-      # 速度/力矩标定：见 package robot_controller 下 urdf/AR5-5_07L-W4C4A2.urdf 各 <limit velocity effort>。
+      # 关节顺序：与 URDF 中 AR5-5_08L-W4C4A6-ZY2_joint_1 … joint_7 一致（Pinocchio 全模型索引 0..6）。
+      # 速度/力矩标定：见 package robot_controller 下 urdf/AR5-5_08L-W4C4A6-ZY2.urdf 各 <limit velocity effort>。
       # motor_params 与阻抗增益在仿真/实机可共用一套；MuJoCo armature 须与 motor_params 一致。
       #
       # 参数分区：
@@ -23,7 +23,7 @@
       # ══════════════════════════════════════════════════════════════════════
       #  1. 基础设置
       # ══════════════════════════════════════════════════════════════════════
-      is_simulation: true
+      is_simulation: false
       control_publish_rate: 500
       state_publish_rate: 10
       teleop_manager_state_topic: "/teleop/teleop_manager_state"
@@ -190,17 +190,16 @@
         vqp_arm_angle_weight: 0.03
         vqp_arm_angle_kp: 1.5
         vqp_arm_angle_ref_policy: user_specified        # q_ref / initial / user_specified
-        # 启动 fallback；系统复位后由 nexus_manage robot_pos_values 覆盖（见 docs/ee_force_feedback_rotation_guide.md）
         vqp_arm_angle_ref_joint_positions: [-1.57, 0.2, 0.0, 2.0, 0.0, 0.0, 0.0]
         vqp_arm_angle_user_ref: 0.0            # policy=user_specified 时，在参考平面上的额外角度偏置(rad)
         vqp_arm_angle_limit_enable: true
-        vqp_arm_angle_min: -0.6                # 相对参考平面允许的最小臂角(rad)
-        vqp_arm_angle_max: 0.6                 # 相对参考平面允许的最大臂角(rad)
+        vqp_arm_angle_min: -0.3                # 相对参考平面允许的最小臂角(rad)
+        vqp_arm_angle_max: 0.3                 # 相对参考平面允许的最大臂角(rad)
         vqp_arm_angle_limit_gain: 5.0
         vqp_arm_angle_fd_step: 0.0001
-        vqp_arm_angle_shoulder_frame: "AR5-5_07L-W4C4A2_link2"
-        vqp_arm_angle_elbow_frame: "AR5-5_07L-W4C4A2_link4"
-        vqp_arm_angle_wrist_frame: "AR5-5_07L-W4C4A2_link7"
+        vqp_arm_angle_shoulder_frame: "AR5-5_08L-W4C4A6-ZY2_link2"
+        vqp_arm_angle_elbow_frame: "AR5-5_08L-W4C4A6-ZY2_link4"
+        vqp_arm_angle_wrist_frame: "AR5-5_08L-W4C4A6-ZY2_link7"
 
         # ── 裁剪 ────────────────────────────────────────────────
         vqp_max_qdot_norm: 2.0            # ‖q̇‖ 上限 (rad/s)；0 = 不限
@@ -247,9 +246,9 @@
       ar5_analytical_ik:
         phi_init_rad: 0.0                                     # 首周期旋臂角初值
         analytic:
-          ee_link_name: "AR5-5_07L-W4C4A2_link7"             # 末端 link
-          shoulder_ref_link_name: "AR5-5_07L-W4C4A2_link2"   # 肩参考 link
-          elbow_ref_link_name: "AR5-5_07L-W4C4A2_link4"      # 肘参考 link
+          ee_link_name: "AR5-5_08L-W4C4A6-ZY2_link7"             # 末端 link
+          shoulder_ref_link_name: "AR5-5_08L-W4C4A6-ZY2_link2"   # 肩参考 link
+          elbow_ref_link_name: "AR5-5_08L-W4C4A6-ZY2_link4"      # 肘参考 link
           max_outer_iters: 40           # LM 外层最大迭代
           lm_lambda_init: 0.01          # LM 初始阻尼
           pos_tol: 1.0e-5               # 位置收敛容差 (m)
@@ -272,24 +271,24 @@
             z: [0.0, 2.0]
           safety_margin: 0.02
         enable_joint_limit_clamp: true
-        # 与 URDF AR5-5_07L-W4C4A2_joint_1..7 的 limit lower/upper 一致（rad）
+        # 与 URDF AR5-5_08L-W4C4A6-ZY2_joint_1..7 的 limit lower/upper 一致（rad）
         joint_limit:
-          min: [-3.14, -2.0944, -3.1067, 0.2, -3.1067, -0.8472, -0.8472]
-          max: [3.14, 2.0944, 3.1067, 2.5307, 3.1067, 0.8472, 0.8472]
+          min: [-3.14, -2.0944, -3.1067, 0.2, -3.1067, -0.8599, -0.8599]
+          max: [3.14, 2.0944, 3.1067, 2.5307, 3.1067, 0.8599, 0.8599]
           safety_margin: 0.1
 
       # ══════════════════════════════════════════════════════════════════════
       #  6. CBF 安全约束
       # ══════════════════════════════════════════════════════════════════════
       enable_cbf: true
-      cbf_urdf_path: "robot_controller/oscbf/cbf_ar5_spherized.urdf"
+      cbf_urdf_path: "robot_controller/oscbf/cbf_ar5_08l_spherized.urdf"
       cbf_config:
         enable_task_space: false
         enable_joint_limit: true
         enable_joint_velocity: true
         enable_self_collision: false
         enable_arm_obstacle_avoidance: false
-        collision_pairs: ["AR5-5_07L-W4C4A2_link1", "AR5-5_07L-W4C4A2_link4", "AR5-5_07L-W4C4A2_link1", "AR5-5_07L-W4C4A2_link3", "AR5-5_07L-W4C4A2_link1", "AR5-5_07L-W4C4A2_link6", "AR5-5_07L-W4C4A2_link1", "AR5-5_07L-W4C4A2_link7"]
+        collision_pairs: ["AR5-5_08L-W4C4A6-ZY2_link1", "AR5-5_08L-W4C4A6-ZY2_link4", "AR5-5_08L-W4C4A6-ZY2_link1", "AR5-5_08L-W4C4A6-ZY2_link3", "AR5-5_08L-W4C4A6-ZY2_link1", "AR5-5_08L-W4C4A6-ZY2_link6", "AR5-5_08L-W4C4A6-ZY2_link1", "AR5-5_08L-W4C4A6-ZY2_link7"]
         task_space_config:
           limits:
             x: [-0.8, 0.8]
@@ -298,8 +297,8 @@
           alpha: 40.0
           safety_margin: 0.02
         joint_limit_config:
-          min: [-3.1067, -2.0944, -3.1067, -1.0472, -3.1067, -0.8472, -0.8472]
-          max: [3.1067, 2.0944, 3.1067, 2.5307, 3.1067, 0.8472, 0.8472]
+          min: [-3.1067, -2.0944, -3.1067, -1.0472, -3.1067, -0.8599, -0.8599]
+          max: [3.1067, 2.0944, 3.1067, 2.5307, 3.1067, 0.8599, 0.8599]
           safety_margin: 0.1
           alpha: 40.0
         joint_velocity_config:

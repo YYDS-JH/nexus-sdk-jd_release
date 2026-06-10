@@ -1,7 +1,7 @@
 /**:
   ros__parameters:
     # ==================== 基本配置 ====================
-    robot_name: "ar5"
+    robot_name: "ar5_08l"
     teleop_name: "nexus_arm_master"
     model_configuration: ["right_wrist", "right_end_effector"]
 
@@ -19,14 +19,9 @@
     ee_base_frame_rotation_z_deg: 90.0
     ee_rpy_limits: [-1.308997, 1.308997, 0.0, 0.0, 0.0, 0.0]
     # 吸盘 revolute↔revolute, 无需量纲转换
-    gripper_scaling_factor: 2.857
+    gripper_scaling_factor: 1.0
     # 允许通过 marker_key 切换 gripper 值正负号（控制吸盘角度 0°/90°）
     gripper_sign_flip_enabled: true
-
-    # 吸盘扳机模式：不扣=放，扣住=吸
-    gripper_suction_mode: true
-    suction_trigger_release: 0.35
-    suction_trigger_squeeze: 0.0
 
     # ==================== 末端执行器配置 ====================
     # AR5 带吸盘：right_end_effector 为吸盘旋转角(rad), nexus_manage 透传
@@ -34,7 +29,7 @@
       right_wrist:
         type: "ee"
         teleop_pos_values: [0.0, -0.65, 0.47, 0.49, -0.17, 0.18]
-        robot_pos_values: [-1.57, 0.52, 0.0, 1.05, 0.0, 0.0, 0.0]
+        robot_pos_values: [0.0, 0.2, 0.0, 2.0, 0.0, 0.0, 0.0]
       right_end_effector:
         type: "gripper"
         teleop_pos_values: [0.0]

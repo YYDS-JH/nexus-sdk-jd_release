@@ -91,6 +91,11 @@ public:
     // 是否允许 marker_key 切换 gripper 值正负号（吸盘角度控制）
     bool getGripperSignFlipEnabled() const;
 
+    // 吸盘扳机模式（扣住→吸、松开→放）
+    bool getGripperSuctionMode() const;
+    double getSuctionTriggerRelease() const;
+    double getSuctionTriggerSqueeze() const;
+
     // 获取状态机更新频率
     double getStateMachineRate() const;
     

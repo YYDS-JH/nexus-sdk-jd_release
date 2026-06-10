@@ -23,7 +23,7 @@
       # ══════════════════════════════════════════════════════════════════════
       #  1. 基础设置
       # ══════════════════════════════════════════════════════════════════════
-      is_simulation: false
+      is_simulation: true
       control_publish_rate: 500
       state_publish_rate: 10
       teleop_manager_state_topic: "/teleop/teleop_manager_state"

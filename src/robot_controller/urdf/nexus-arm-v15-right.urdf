@@ -454,7 +454,7 @@
     name="force_Link">
     <inertial>
       <origin
-        xyz="-1.41077149962143E-11 0.0799999999999982 -3.84194898117585E-11"
+        xyz="0 0 0"
         rpy="0 0 0" />
       <mass
         value="0.0001135" />
@@ -494,7 +494,7 @@
     name="force_Joint"
     type="fixed">
     <origin
-      xyz="0 0 0"
+      xyz="0 0.08 0"
       rpy="0 0 0" />
     <parent
       link="link6_Link" />

@@ -5,16 +5,16 @@
       # 共享控制参数（所有机械臂通用）
       # ========================================
       # 仿真模式标志
-      is_simulation: false             # true: 仿真模式（不加电机惯量）, false: 真实机器人（加电机惯量）
+      is_simulation: true             # true: 仿真模式（不加电机惯量）, false: 真实机器人（加电机惯量）
       
       # 控制频率参数
       control_publish_rate: 500      # 控制命令发布频率 (Hz)
       state_publish_rate: 10          # 节点状态发布频率 (Hz)
-      # Teleop 管理器状态话题（用于 suspend 期间禁用力反馈）
+      # Teleop 管理器状态话题（仅在 TeleopRunning 期间启用力反馈）
       teleop_manager_state_topic: "/teleop/teleop_manager_state"
 
       # 主臂力反馈增益（从臂外力估计 × ee_ff_gain → 主臂关节力矩）
-      ee_ff_gain: 0.0
+      ee_ff_gain: 0.6
       # 力反馈 xy 旋转由从臂 publish 前完成（ee_ff_rotation_z_auto）；主臂侧保持 0 避免双重旋转
       # ee_ff_rotation_z_deg: 0.0
 

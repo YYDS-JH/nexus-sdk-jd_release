@@ -9,9 +9,9 @@
     state_machine_rate: 100.0  # 状态机更新频率(Hz)
 
     # ==================== 缩放因子配置 ====================
-    ee_pos_scaling_factor_x: 1.4
+    ee_pos_scaling_factor_x: 2.4
     ee_pos_scaling_factor_y: 1.4
-    ee_pos_scaling_factor_z: 1.4
+    ee_pos_scaling_factor_z: 1.5
     ee_vel_scaling_factor_x: 1.0
     ee_vel_scaling_factor_y: 1.0
     ee_vel_scaling_factor_z: 1.0

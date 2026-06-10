@@ -47,7 +47,8 @@
     end_wrench_state_topic: "/robot/end_wrench"
     end_effector_cmd_topic: "/robot/end_effector_cmd"
     node_state_topic: "/robot/controller_state"
-    right_wrist_cartesian_impedance_topic: "/ar5_suction_cup/robot/right_cartesian_impedance"
+    # 与 master_single_nexus*_config 一致；各 AR5 变体共用同一力反馈 topic
+    right_wrist_cartesian_impedance_topic: "/ar5/robot/right_cartesian_impedance"
 
     # ==================== Simulation mode ====================
     is_simulation: true
