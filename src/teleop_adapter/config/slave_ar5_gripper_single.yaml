@@ -20,10 +20,19 @@ slave_arm_adapter:
     # 外设HTTP服务地址（夹爪控制）
     right_arm_peripheral_url: 'http://192.168.9.77:8080'
 
-    # 负载信息（可选，不设置则默认为0）
+    # 负载信息（可选；默认优先读取 HMI toolset，失败时使用下方 YAML 值）
     right_arm_load_mass: 0.0            # 负载质量, kg
     right_arm_load_cog: [0.0, 0.0, 0.0] # 质心 [x, y, z], m
     right_arm_load_inertia: [0.0, 0.0, 0.0] # 惯量 [ix, iy, iz], kg·m²
+    right_arm_prefer_robot_toolset: true
+
+    # 实时力控参数（与 Rokae 供应商示例一致）
+    right_arm_movej_speed: 100
+    right_arm_filter_joint_hz: 10.0
+    right_arm_filter_cartesian_hz: 10.0
+    right_arm_filter_torque_hz: 10.0
+    right_arm_fc_friction: [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3]
+    right_arm_fc_gain: [30.0, 30.0, 30.0, 30.0, 30.0, 30.0, 30.0]
 
     # whether to enable robotic arm
     auto_enable: true

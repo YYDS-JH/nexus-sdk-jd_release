@@ -5,7 +5,7 @@
       # 共享控制参数（所有机械臂通用）
       # ========================================
       # 仿真模式标志
-      is_simulation: true             # true: 仿真模式（不加电机惯量）, false: 真实机器人（加电机惯量）
+      is_simulation: false             # true: 仿真模式（不加电机惯量）, false: 真实机器人（加电机惯量）
       
       # 控制频率参数
       control_publish_rate: 500      # 控制命令发布频率 (Hz)

@@ -10,6 +10,7 @@
 #ifndef TELEOP_ADAPTER_AR5_ARM_ADAPTER_HPP
 #define TELEOP_ADAPTER_AR5_ARM_ADAPTER_HPP
 
+#include "teleop_adapter/adapters/ar5_rt_setup.hpp"
 #include "teleop_adapter/adapters/device_adapter.hpp"
 #include <memory>
 #include <string>
@@ -30,7 +31,8 @@ public:
                       1.5707963267948966192313216916397514, 0},
                   double load_mass = 0,
                   const std::array<double, 3>& load_cog = {},
-                  const std::array<double, 3>& load_inertia = {});
+                  const std::array<double, 3>& load_inertia = {},
+                  const ar5_rt_setup::Config& rt_setup = {});
     ~Ar5ArmAdapter() override;
 
     bool deviceHandshake() override;

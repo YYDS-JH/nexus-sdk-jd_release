@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-跨网段启动文件 — Nexus-Arm V18 Right → AR5（一控多部署）
+跨网段启动文件 — Nexus-Arm V18 Right → AR5 真机单臂（无吸盘，一控多部署）
 
 通过路由器 NAT 端口转发实现跨子网 DDS 通信。
 支持一台 Master（Nexus-Arm）同时遥控多台 Slave（AR5），
@@ -75,7 +75,7 @@ _MASTER_NODES = [
 ]
 
 _SLAVE_NODES = [
-    ('mujoco_sim',   'ar5_sim.launch.py'),
+    ('teleop_adapter',   'slave_ar5_single.launch.py'),
     ('human_data',       'ar5_human_data_solver.launch.py'),
     ('robot_controller', 'slave_single_ar5.launch.py'),
 ]
