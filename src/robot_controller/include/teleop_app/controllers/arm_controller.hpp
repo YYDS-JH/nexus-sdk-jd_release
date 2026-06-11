@@ -366,11 +366,6 @@ public:
         const JointState& current_joint_state,
         const Eigen::Matrix4d& desired_pose) const;
 
-    /**
-     * @brief 复位后将 IK 配置同步到运行时 RobotModel（如 vqp_arm_angle_ref_joint_positions）
-     */
-    void updateRuntimeIkConfig(const IKConfig& ik_config);
-
 private:
     struct Impl;
     std::unique_ptr<Impl> impl_;

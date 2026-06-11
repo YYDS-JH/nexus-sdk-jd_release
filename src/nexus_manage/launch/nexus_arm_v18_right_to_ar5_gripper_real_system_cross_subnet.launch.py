@@ -144,16 +144,22 @@ def _write_cyclonedds_config(xml_content: str) -> str:
 # Launch 组装
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def _include(package: str, launch_file: str) -> IncludeLaunchDescription:
+def _include(package: str, launch_file: str, launch_arguments=None):
+    kwargs = {}
+    if launch_arguments:
+        kwargs['launch_arguments'] = launch_arguments.items()
     return IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             PathJoinSubstitution([FindPackageShare(package), 'launch', launch_file])
-        ])
+        ]),
+        **kwargs
     )
-
-
 def launch_setup(context, *args, **kwargs):
     role = LaunchConfiguration('role').perform(context).strip().lower()
+    robot_id = LaunchConfiguration('robot_id').perform(context).strip()
+    # Master role: nexus_manage handles multi-slave via dynamic switchToRobot(),
+    # so robot_id must NOT be baked into node names at launch time.
+    launch_args = {'robot_id': robot_id} if (role != 'master' and robot_id) else None
 
     # 根据 role 选取配置
     if role == 'master':
@@ -193,15 +199,15 @@ def launch_setup(context, *args, **kwargs):
     # 组装节点
     if role == 'master':
         launch_actions = [
-            _include(pkg, launch_file) for pkg, launch_file in _MASTER_NODES
+            _include(pkg, launch_file, launch_args) for pkg, launch_file in _MASTER_NODES
         ]
     elif role == 'slave':
         launch_actions = [
-            _include(pkg, launch_file) for pkg, launch_file in _SLAVE_NODES
+            _include(pkg, launch_file, launch_args) for pkg, launch_file in _SLAVE_NODES
         ]
     else:
         launch_actions = [
-            _include(pkg, launch_file)
+            _include(pkg, launch_file, launch_args)
             for pkg, launch_file in (_MASTER_NODES + _SLAVE_NODES)
         ]
 
@@ -210,6 +216,11 @@ def launch_setup(context, *args, **kwargs):
 
 def generate_launch_description():
     return LaunchDescription([
+        DeclareLaunchArgument(
+            'robot_id',
+            default_value='',
+            description='Optional prefix for node name to avoid conflicts'
+        ),
         DeclareLaunchArgument(
             'role',
             default_value='',

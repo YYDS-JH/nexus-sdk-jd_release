@@ -62,7 +62,15 @@ public:
       * @usage  
       */
     bool updateResetPositions();
-    
+
+    /**
+      * @brief  设置指定末端执行器的从臂复位位置
+      * @param  name 末端执行器名称
+      * @param  values 从臂关节位置值
+      * @usage  由 BootSelfCheck Phase 2 捕获从臂当前位置后调用
+      */
+    void setRobotPosValues(const std::string& name, const std::vector<double>& values);
+
     const std::vector<EndEffectorConfig>& getEndEffectorConfigs() const;
     
     /**
@@ -91,10 +99,11 @@ public:
     // 是否允许 marker_key 切换 gripper 值正负号（吸盘角度控制）
     bool getGripperSignFlipEnabled() const;
 
-    // 吸盘扳机模式（扣住→吸、松开→放）
-    bool getGripperSuctionMode() const;
-    double getSuctionTriggerRelease() const;
-    double getSuctionTriggerSqueeze() const;
+    // 落格流程配置
+    bool getPlacementEnabled() const;
+    double getPlacementMoveTimeoutSec() const;
+    double getPlacementReleaseHoldSec() const;
+    double getPlacementPositionTolerance() const;
 
     // 获取状态机更新频率
     double getStateMachineRate() const;

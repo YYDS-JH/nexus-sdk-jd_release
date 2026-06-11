@@ -133,15 +133,6 @@ public:
     void setGripperSignFlip(bool flip);
 
     /**
-      * @brief  配置吸盘扳机模式（线程安全）
-      * @param  enabled         是否启用吸盘扳机映射（扣住→吸、松开→放）
-      * @param  trigger_release 扳机松开(放)时的 g 值（human_data 解算后）
-      * @param  trigger_squeeze 扳机扣住(吸)时的 g 值（human_data 解算后）
-      * @retval null
-      */
-    void setGripperSuctionMode(bool enabled, double trigger_release, double trigger_squeeze);
-
-    /**
       * @brief  获取 gripper 符号翻转状态（线程安全）
       * @param  null
       * @retval 是否翻转符号

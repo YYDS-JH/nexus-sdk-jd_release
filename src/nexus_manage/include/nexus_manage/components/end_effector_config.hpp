@@ -21,6 +21,7 @@ struct EndEffectorConfig {
     std::string type;                       // 类型："ee"或"gripper"
     std::vector<double> teleop_pos_values;  // 主臂位置初始值
     std::vector<double> robot_pos_values;   // 从臂位置初始值
+    std::vector<double> placement_robot_pos_values;  // 落格目标关节角(从臂)，空则该末端不参与落格运动
 };
 
 } // namespace components

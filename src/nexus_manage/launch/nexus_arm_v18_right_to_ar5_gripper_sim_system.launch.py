@@ -4,9 +4,9 @@
 """
 
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 
 
@@ -20,8 +20,9 @@ def generate_launch_description():
                 'launch',
                 'ar5_gripper_sim.launch.py'
             ])
-        ])
-    )
+        ]),
+        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
+        )
 
     # 2. Nexus-Arm V18 Right 仿真器 Launch
     nexus_arm_sim_launch = IncludeLaunchDescription(
@@ -31,8 +32,9 @@ def generate_launch_description():
                 'launch',
                 'nexus_arm_v18_right_sim.launch.py'
             ])
-        ])
-    )
+        ]),
+        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
+        )
 
     # 3. Human Data Solver Launch
     ar5_gripper_human_data_solver_launch = IncludeLaunchDescription(
@@ -42,8 +44,9 @@ def generate_launch_description():
                 'launch',
                 'ar5_gripper_human_data_solver.launch.py'
             ])
-        ])
-    )
+        ]),
+        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
+        )
 
     nexus_arm_human_data_solver_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
@@ -52,8 +55,9 @@ def generate_launch_description():
                 'launch',
                 'nexus_arm_v18_right_human_data_solver.launch.py'
             ])
-        ])
-    )
+        ]),
+        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
+        )
 
     # 4. Gripper Keyboard Launch
     gripper_launch = IncludeLaunchDescription(
@@ -63,8 +67,9 @@ def generate_launch_description():
                 'launch',
                 'nexus-arm_left_gripper.launch.py'
             ])
-        ])
-    )
+        ]),
+        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
+        )
 
     # 5. Robot Controller Launch - Master (Nexus-Arm)
     master_controller_launch = IncludeLaunchDescription(
@@ -74,8 +79,9 @@ def generate_launch_description():
                 'launch',
                 'master_single_nexus.launch.py'
             ])
-        ])
-    )
+        ]),
+        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
+        )
 
     # 6. Robot Controller Launch - Slave (AR5 Gripper)
     slave_controller_launch = IncludeLaunchDescription(
@@ -85,8 +91,9 @@ def generate_launch_description():
                 'launch',
                 'slave_single_ar5_gripper.launch.py'
             ])
-        ])
-    )
+        ]),
+        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
+        )
 
     # 7. Nexus Manage Launch
     manager_launch = IncludeLaunchDescription(
@@ -96,10 +103,17 @@ def generate_launch_description():
                 'launch',
                 'nexus_nexus-arm_v18_to_ar5_gripper_manage.launch.py'
             ])
-        ])
-    )
+        ]),
+        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
+        )
 
     return LaunchDescription([
+        DeclareLaunchArgument(
+            'robot_id',
+            default_value='',
+            description='Optional prefix for node name to avoid conflicts'
+        ),
+
         ar5_gripper_sim_launch,
         nexus_arm_sim_launch,
         ar5_gripper_human_data_solver_launch,

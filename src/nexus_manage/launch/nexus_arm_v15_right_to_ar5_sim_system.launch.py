@@ -4,9 +4,9 @@
 """
 
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 
 
@@ -19,7 +19,8 @@ def generate_launch_description():
                 'launch',
                 'ar5_sim.launch.py'
             ])
-        ])
+        ]),
+        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
     )
 
     nexus_arm_sim_launch = IncludeLaunchDescription(
@@ -29,7 +30,8 @@ def generate_launch_description():
                 'launch',
                 'nexus_arm_v15_right_sim.launch.py'
             ])
-        ])
+        ]),
+        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
     )
 
     ar5_human_data_solver_launch = IncludeLaunchDescription(
@@ -39,7 +41,8 @@ def generate_launch_description():
                 'launch',
                 'ar5_human_data_solver.launch.py'
             ])
-        ])
+        ]),
+        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
     )
 
     nexus_arm_human_data_solver_launch = IncludeLaunchDescription(
@@ -49,7 +52,8 @@ def generate_launch_description():
                 'launch',
                 'nexus_arm_v15_right_human_data_solver.launch.py'
             ])
-        ])
+        ]),
+        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
     )
 
     gripper_launch = IncludeLaunchDescription(
@@ -59,7 +63,8 @@ def generate_launch_description():
                 'launch',
                 'nexus-arm_left_gripper.launch.py'
             ])
-        ])
+        ]),
+        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
     )
 
     master_controller_launch = IncludeLaunchDescription(
@@ -69,7 +74,8 @@ def generate_launch_description():
                 'launch',
                 'master_single_nexus_v15_right.launch.py'
             ])
-        ])
+        ]),
+        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
     )
 
     slave_controller_launch = IncludeLaunchDescription(
@@ -79,7 +85,8 @@ def generate_launch_description():
                 'launch',
                 'slave_single_ar5.launch.py'
             ])
-        ])
+        ]),
+        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
     )
 
     manager_launch = IncludeLaunchDescription(
@@ -89,10 +96,17 @@ def generate_launch_description():
                 'launch',
                 'nexus_nexus-arm_v15_right_to_ar5_manage.launch.py'
             ])
-        ])
+        ]),
+        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
     )
 
     return LaunchDescription([
+        DeclareLaunchArgument(
+            'robot_id',
+            default_value='',
+            description='Optional prefix for node name to avoid conflicts'
+        ),
+
         ar5_sim_launch,
         nexus_arm_sim_launch,
         ar5_human_data_solver_launch,
@@ -102,3 +116,4 @@ def generate_launch_description():
         slave_controller_launch,
         manager_launch,
     ])
+

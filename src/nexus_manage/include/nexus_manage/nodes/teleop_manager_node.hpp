@@ -49,6 +49,7 @@ class TeleopRunningState;
 class TeleopPausedState;
 class FaultState;
 class ModelInferenceState;
+class PlacementState;
 } // namespace states
 
 /**
@@ -206,6 +207,18 @@ public:
       * @usage  由 ModelInferenceState::on_update() 调用
       */
     void forwardInferenceCommand();
+
+    /**
+      * @brief  发布当前位姿保持 + 吸盘释放指令
+      * @usage  由 PlacementState 在释放/等待确认阶段调用
+      */
+    void publishHoldAndReleaseCmd();
+
+    /**
+      * @brief  发布当前位姿保持（不释放吸盘）
+      * @usage  由 PlacementState 在落格移动暂停时调用
+      */
+    void publishSlaveHoldCmd();
     
     /**
       * @brief  重置推理指令标志（退出推理状态时调用）
@@ -235,9 +248,23 @@ public:
       * @brief  检查是否有新的推理指令
       * @param  null
       * @retval 是否有新指令
-      * @usage  
+      * @usage
       */
     bool hasNewInferenceCmd() const;
+
+    /**
+      * @brief  执行挂起的机器人切换（由 PositionHoldState::on_entry 调用）
+      * @param  null
+      * @retval null
+      * @usage
+      */
+    void executePendingSwitch();
+
+    void advanceBootSelfCheckToPhase2();
+    bool isBootSelfCheckPhase2() const;
+
+    bool hasPendingRobotSwitch() const;
+    void clearPendingRobotSwitch();
 
 private:
     struct Impl;
@@ -252,6 +279,7 @@ private:
     friend class states::TeleopPausedState;
     friend class states::FaultState;
     friend class states::ModelInferenceState;
+    friend class states::PlacementState;
 };
 
 /*******************************************************************************

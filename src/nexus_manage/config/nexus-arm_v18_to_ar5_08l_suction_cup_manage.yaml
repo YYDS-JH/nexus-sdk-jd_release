@@ -9,9 +9,9 @@
     state_machine_rate: 100.0  # 状态机更新频率(Hz)
 
     # ==================== 缩放因子配置 ====================
-    ee_pos_scaling_factor_x: 2.4
+    ee_pos_scaling_factor_x: 1.4
     ee_pos_scaling_factor_y: 1.4
-    ee_pos_scaling_factor_z: 1.5
+    ee_pos_scaling_factor_z: 1.4
     ee_vel_scaling_factor_x: 1.0
     ee_vel_scaling_factor_y: 1.0
     ee_vel_scaling_factor_z: 1.0
@@ -23,6 +23,11 @@
     # 允许通过 marker_key 切换 gripper 值正负号（控制吸盘角度 0°/90°）
     gripper_sign_flip_enabled: true
 
+    placement_enabled: true
+    placement_move_timeout_sec: 30.0
+    placement_release_hold_sec: 0.5
+    placement_position_tolerance: 0.10
+
     # ==================== 末端执行器配置 ====================
     # AR5 带吸盘：right_end_effector 为吸盘旋转角(rad), nexus_manage 透传
     end_effector_configs:
@@ -30,6 +35,7 @@
         type: "ee"
         teleop_pos_values: [0.0, -0.65, 0.47, 0.49, -0.17, 0.18]
         robot_pos_values: [-1.57, 0.52, 0.0, 1.05, 0.0, 0.0, 0.0]
+        placement_robot_pos_values: [-1.57, 0.52, 0.0, 0.52, 0.0, 0.0, 0.0]
       right_end_effector:
         type: "gripper"
         teleop_pos_values: [0.0]

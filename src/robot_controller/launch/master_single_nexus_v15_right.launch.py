@@ -1,88 +1,64 @@
 #!/usr/bin/env python3
 """
-Nexus-Arm V15 Right 控制系统启动文件（仅控制层）
-
-启动：
-- arm_control_node (控制层)
-
-使用 v15 right 专用配置文件
-
-Usage:
-  ros2 launch robot_controller master_single_nexus_v15_right.launch.py
+Launch file.
 """
 
+import os
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
-from launch_ros.substitutions import FindPackageShare
-from launch.conditions import IfCondition
+from ament_index_python.packages import get_package_share_directory
 
 
-def generate_launch_description():
+def launch_setup(context, *args, **kwargs):
+    robot_id = LaunchConfiguration('robot_id').perform(context).strip()
+    base_name = 'master_arm_control'
+    node_name = f'{robot_id}_{base_name}' if robot_id else base_name
 
-    robot_controller_share = FindPackageShare('robot_controller')
+    log_level = LaunchConfiguration('log_level').perform(context)
+    debug = LaunchConfiguration('debug').perform(context).strip()
 
-    # ========== Declare Launch Arguments ==========
+    debug_prefix = ['gdb -ex run --args'] if debug == 'true' else []
 
-    declare_log_level = DeclareLaunchArgument(
-        'log_level',
-        default_value='info',
-        description='Log level (debug, info, warn, error, fatal)'
-    )
+    pkg_share = get_package_share_directory('robot_controller')
+    robot_config = os.path.join(pkg_share, 'config', 'master_single_nexus_v15_right_config.yaml')
+    controller_config = os.path.join(pkg_share, 'config', 'master_arm_control_nexus_v15_right.yaml')
+    gripper_config = os.path.join(pkg_share, 'config', 'gripper_config_nexus_v15_right.yaml')
 
-    declare_debug = DeclareLaunchArgument(
-        'debug',
-        default_value='false',
-        description='Enable GDB debugging (true/false)'
-    )
+    params = [robot_config, controller_config, gripper_config]
+    if robot_id:
+        params.append({'master_robot_cfg.robot_name': robot_id})
 
-    # ========== Configuration Files ==========
-
-    # 机器人结构配置（URDF路径、关节配置、话题等）
-    robot_config = PathJoinSubstitution([
-        robot_controller_share,
-        'config',
-        'master_single_nexus_v15_right_config.yaml'
-    ])
-
-    # 控制器参数配置（Kp/Kd增益、控制频率等）
-    controller_config = PathJoinSubstitution([
-        robot_controller_share,
-        'config',
-        'master_arm_control_nexus_v15_right.yaml'
-    ])
-
-    # 夹爪配置参数
-    gripper_config = PathJoinSubstitution([
-        robot_controller_share,
-        'config',
-        'gripper_config_nexus_v15_right.yaml'
-    ])
-
-    # ========== Launch Nodes ==========
-
-    # 修复 prefix 的条件化逻辑，避免在生成描述时调用 perform
-    debug_prefix = ['gdb -ex run --args'] if LaunchConfiguration('debug') == 'true' else []
-
-    # Arm Control Node（控制层）
-    arm_control_node = Node(
+    node = Node(
         package='robot_controller',
         executable='arm_control_node',
-        name='master_arm_control',
+        name=node_name,
         output='screen',
-        parameters=[
-            robot_config,       # 机器人结构配置
-            controller_config, # 控制器参数配置
-            gripper_config     # 夹爪配置参数
-        ],
-        arguments=['--ros-args', '--log-level', LaunchConfiguration('log_level')],
+        parameters=params,
+        arguments=['--ros-args', '--log-level', log_level],
         prefix=debug_prefix,
         respawn=False,
     )
+    return [node]
 
+
+def generate_launch_description():
     return LaunchDescription([
-        declare_log_level,
-        declare_debug,
-        arm_control_node,
+        DeclareLaunchArgument(
+            'robot_id',
+            default_value='',
+            description='Optional prefix for node name to avoid conflicts'
+        ),
+        DeclareLaunchArgument(
+            'log_level',
+            default_value='info',
+            description='Log level (debug, info, warn, error, fatal)'
+        ),
+        DeclareLaunchArgument(
+            'debug',
+            default_value='false',
+            description='Enable GDB debugging (true/false)'
+        ),
+        OpaqueFunction(function=launch_setup),
     ])

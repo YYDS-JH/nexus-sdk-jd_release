@@ -54,6 +54,11 @@ namespace Events {
     const std::string FAULT_CLEAR = "fault_clear";
     const std::string INFERENCE_ENTER = "inference_enter";
     const std::string INFERENCE_EXIT = "inference_exit";
+    const std::string ROBOT_SWITCH = "robot_switch";
+    const std::string PLACEMENT_START = "placement_start";
+    const std::string PLACEMENT_CONFIRM = "placement_confirm";
+    const std::string PLACEMENT_ABORT = "placement_abort";
+    const std::string PLACEMENT_FAILURE = "placement_failure";
 }
 
 /**
@@ -72,6 +77,7 @@ namespace StateNames {
     const std::string TELEOP_PAUSED = "TeleopPaused";
     const std::string FAULT = "Fault";
     const std::string MODEL_INFERENCE = "ModelInference";
+    const std::string PLACEMENT = "Placement";
 }
 
 /*******************************************************************************
@@ -98,13 +104,17 @@ private:
     std::shared_ptr<TeleopManagerNode> node_;
     rclcpp::Time entry_time_;
     bool self_check_passed_{false};
+    bool capture_done_{false};
+    bool idle_sent_for_switch_{false};
     
     // 自检步骤函数
     bool checkConfiguration();
     bool checkControllerServices();
+    bool checkTeleopData();
     bool checkControllerStates();
     bool checkHumanDataMessages();
     bool checkEndEffectorData();
+    void captureSlaveJointPositions();
 };
 
 /**
@@ -125,10 +135,6 @@ public:
 
 private:
     std::shared_ptr<TeleopManagerNode> node_;
-    bool robot_idle_requested_{false};
-    bool teleop_idle_requested_{false};
-    rclcpp::Time entry_time_;
-    rclcpp::Time last_retry_time_;
 };
 
 /**
@@ -281,6 +287,43 @@ public:
 
 private:
     std::shared_ptr<TeleopManagerNode> node_;
+};
+
+/**
+  * @brief  Placement 状态：落格流程（移动→释放吸盘→等待确认）
+  * @usage  按住 take_over_key 落格运动，松开暂停，再按继续；到位后 data_collect_key 确认退出
+  */
+class PlacementState : public robot_sdk::IState {
+public:
+    explicit PlacementState(std::shared_ptr<TeleopManagerNode> node);
+
+    std::string name() const override { return StateNames::PLACEMENT; }
+    void on_entry() override;
+    void on_exit() override;
+    void on_update() override;
+    std::string handle_event(const std::string& event) override;
+
+private:
+    enum class Phase {
+        MOVING,
+        RELEASING,
+        AWAIT_CONFIRM
+    };
+
+    std::shared_ptr<TeleopManagerNode> node_;
+    Phase phase_{Phase::MOVING};
+    bool move_request_sent_{false};
+    rclcpp::Time phase_start_time_;
+    rclcpp::Time entry_time_;
+
+    void publishPhaseState(const std::string& phase_name);
+    void sendPlacementMoveRequest();
+    void sendSlaveRunningRequest();
+    void pausePlacementMove();
+    bool checkPlacementPositionReached() const;
+    bool jointPosCheck(const std::vector<double>& current_pos,
+                       const std::vector<double>& target_pos,
+                       double tolerance) const;
 };
 
 /*******************************************************************************

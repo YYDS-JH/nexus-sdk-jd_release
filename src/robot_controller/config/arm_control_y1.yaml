@@ -10,7 +10,7 @@
       # 控制频率参数
       control_publish_rate: 500      # 控制命令发布频率 (Hz)
       state_publish_rate: 10          # 节点状态发布频率 (Hz)
-      # Teleop 管理器状态话题（仅在 TeleopRunning 期间启用力反馈）
+      # Teleop 管理器状态话题（用于 suspend 期间禁用力反馈）
       teleop_manager_state_topic: "/teleop/teleop_manager_state"
 
       # 故障检测参数
