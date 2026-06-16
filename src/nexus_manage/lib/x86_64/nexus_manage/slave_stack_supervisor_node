@@ -58,7 +58,6 @@ class SlaveStackSupervisor(Node):
     self.declare_parameter('stack_stop_timeout_sec', 15.0)
     self.declare_parameter('publish_hz', 1.0)
     self.declare_parameter('auto_start_on_boot', False)
-    self.declare_parameter('stack_cyclonedds_uri', '')
 
     self._operator_topic = self.get_parameter('operator_status_topic').value
     self._yj_topic = self.get_parameter('yj_operator_topic').value
@@ -75,8 +74,6 @@ class SlaveStackSupervisor(Node):
     self._start_timeout = float(self.get_parameter('stack_start_timeout_sec').value)
     self._stop_timeout = float(self.get_parameter('stack_stop_timeout_sec').value)
     self._auto_start = bool(self.get_parameter('auto_start_on_boot').value)
-    self._stack_cyclonedds_uri = str(
-        self.get_parameter('stack_cyclonedds_uri').value).strip()
 
     self._phase = StackPhase.STOPPED
     self._stack_proc: Optional[subprocess.Popen] = None
@@ -98,8 +95,7 @@ class SlaveStackSupervisor(Node):
 
     self.get_logger().info(
         f'Slave stack supervisor ready: stack={self._stack_pkg}/{self._stack_launch} '
-        f'robot_id={self._robot_id or "(default)"} rci={self._rci_service} '
-        f'stack_dds={self._stack_cyclonedds_uri or "(inherit)"}')
+        f'robot_id={self._robot_id or "(default)"} rci={self._rci_service}')
 
     if self._auto_start:
       self.get_logger().warn('auto_start_on_boot=true: starting slave stack immediately')
@@ -172,20 +168,11 @@ class SlaveStackSupervisor(Node):
       cmd.append(f'robot_id:={self._robot_id}')
 
     self.get_logger().info(f'Starting slave stack: {" ".join(cmd)}')
-    env = os.environ.copy()
-    if self._stack_cyclonedds_uri:
-        stack_uri = self._stack_cyclonedds_uri
-        if not stack_uri.startswith('file://'):
-            stack_uri = 'file://' + stack_uri
-        env['CYCLONEDDS_URI'] = stack_uri
-        env.setdefault('ROS_DOMAIN_ID', '18')
-        env.setdefault('RMW_IMPLEMENTATION', 'rmw_cyclonedds_cpp')
     try:
       proc = subprocess.Popen(
           cmd,
           stdout=None,
           stderr=None,
-          env=env,
           preexec_fn=os.setsid,
           text=True,
       )
@@ -318,12 +305,11 @@ class SlaveStackSupervisor(Node):
   def _publish_yj_status(self):
     with self._lock:
       phase = self._phase
-      task_state = self._task_state
       error_code = self._error_code
 
-    stack_running = phase in (StackPhase.RUNNING, StackPhase.STARTING)
-    # 新语义：栈停止=online（让出控制权），栈运行=offline（遥操占用）
-    status = 'offline' if stack_running else 'online'
+    # 栈已停止 / 让出控制权 → online；遥操栈运行中 → offline
+    stack_active = phase == StackPhase.RUNNING
+    status = 'offline' if stack_active else 'online'
     target_car = self._target_car or self._last_car or self._robot_id
     target_ip = self._yj_target_ip or self._last_ip
 
@@ -331,12 +317,8 @@ class SlaveStackSupervisor(Node):
         'device_id': self._yj_device_id,
         'target_car': target_car,
         'target_ip': target_ip,
-        'connected': self._last_connected and stack_running,
+        'connected': bool(stack_active and self._last_connected),
         'status': status,
-        'task_state': task_state,
-        'scheduler_mode': self._last_mode,
-        'stack_phase': phase.value,
-        'battery_pct': 100,
         'signal_dbm': -50,
         'e_stop_pressed': False,
         'control_latency_ms': 0,
