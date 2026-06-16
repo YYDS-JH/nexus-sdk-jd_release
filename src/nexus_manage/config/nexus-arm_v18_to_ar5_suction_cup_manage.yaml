@@ -9,19 +9,23 @@
     state_machine_rate: 100.0  # 状态机更新频率(Hz)
 
     # ==================== 缩放因子配置 ====================
-    ee_pos_scaling_factor_x: 1.4
+    ee_pos_scaling_factor_x: 2.4
     ee_pos_scaling_factor_y: 1.4
-    ee_pos_scaling_factor_z: 1.4
+    ee_pos_scaling_factor_z: 1.5
     ee_vel_scaling_factor_x: 1.0
     ee_vel_scaling_factor_y: 1.0
     ee_vel_scaling_factor_z: 1.0
     ee_rot_scaling_factor: 1.0
     ee_base_frame_rotation_z_deg: 90.0
     ee_rpy_limits: [-1.308997, 1.308997, 0.0, 0.0, 0.0, 0.0]
-    # 吸盘 revolute↔revolute, 无需量纲转换
-    gripper_scaling_factor: 1.0
-    # 允许通过 marker_key 切换 gripper 值正负号（控制吸盘角度 0°/90°）
+    gripper_scaling_factor: 2.857
+    # 允许通过 marker_key 切换 gripper 值正负号（控制吸盘角度 135°/45°）
     gripper_sign_flip_enabled: true
+
+    # 吸盘扳机模式：不扣=放，扣住=吸
+    gripper_suction_mode: true
+    suction_trigger_release: 0.35
+    suction_trigger_squeeze: 0.0
 
     # ==================== 落格流程配置 ====================
     placement_enabled: true

@@ -25,7 +25,12 @@
   Participant port = _PORT_BASE + ParticipantIndex
   每个节点自动分配一个独立端口。
 """
+import os
+import sys
 
+# Ensure the launch directory is on sys.path so that sibling modules
+# (e.g. slave_registry) are importable under ROS 2 Humble's loader.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import tempfile
 
 from launch import LaunchDescription
@@ -43,12 +48,12 @@ from slave_registry import find_slave_by_ip, generate_peers_xml, load_registry
 _DOMAIN_ID = '18'
 
 # Master 侧（外网，Nexus-Arm 端）
-_MASTER_NETWORK_INTERFACE = "enp0s31f6"
-_MASTER_EXTERNAL_IP = "192.168.8.74"
+_MASTER_NETWORK_INTERFACE = "wlo1"
+_MASTER_EXTERNAL_IP = "192.168.9.6"
 
 # Slave 侧（AGV 内网，AR5 端）
 _SLAVE_NETWORK_INTERFACE = "eno1"
-_SLAVE_EXTERNAL_IP = "192.168.8.78"
+_SLAVE_EXTERNAL_IP = "192.168.9.4"
 
 # DDS 端口基数（主从共用）
 _PORT_BASE = 7000

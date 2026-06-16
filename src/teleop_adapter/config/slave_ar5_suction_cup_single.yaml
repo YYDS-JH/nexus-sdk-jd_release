@@ -9,21 +9,22 @@
     # right_arm_port 复用为 robot_ip（AR5控制器IP地址）
     right_arm_port: '192.168.9.160'
     # 本机IP地址（用于实时数据收发）
-    right_arm_local_ip: '192.168.9.5'
+    right_arm_local_ip: '192.168.9.4'
 
     right_arm_feedback_rate: 500   # AR5 SDK力矩控制周期500Hz = 2ms
     right_arm_num_of_dofs: 8       # 7 AR5关节 + 1 吸盘关节
 
     # 启动时MoveJ到的初始关节位姿（rad），参考xMate拖拽位姿（仅7个臂关节）
-    right_arm_init_joint_positions: [-1.57, 0.52, 0.0, 1.05, 0.0, 0.0, 0.0]
+    right_arm_init_joint_positions: [-1.56990, -0.42871,  0.00003,  1.60350,  0.00005, 0.78517,  0.00002]
+    #right_arm_init_joint_positions: [-1.57, 0.52, 0.0, 1.05, 0.0, 0.0, 0.0]
 
     # 外设HTTP服务地址（旋转吸盘控制）
     right_arm_peripheral_url: 'http://192.168.9.77:8080'
 
     # 负载信息（可选；默认优先读取 HMI toolset，失败时使用下方 YAML 值）
-    right_arm_load_mass: 1.917355            # 负载质量, kg
-    right_arm_load_cog: [-0.0019173, 0.017286, -0.096068] # 质心 [x, y, z], m
-    right_arm_load_inertia: [0.032281, 0.036663, 0.0089899] # 惯量 [ix, iy, iz], kg·m²
+    right_arm_load_mass: 1.073709            # 负载质量, kg
+    right_arm_load_cog: [0.007218, 0.025491, 0.062558] # 质心 [x, y, z], m
+    right_arm_load_inertia: [0.002153, 0.011434, 0.010143] # 惯量 [ix, iy, iz], kg·m²
     right_arm_prefer_robot_toolset: true
 
     # 实时力控参数（与 Rokae 供应商示例一致）

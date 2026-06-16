@@ -69,6 +69,10 @@ _PORT_BASE = 7000
 # ParticipantIndex 最大分配值（预留余量，避免加节点后改路由器转发规则）
 _MAX_AUTO_PARTICIPANT_INDEX = 50
 _NEXUS_MANAGE_START_DELAY_SEC = 8.0
+# supervisor 是独立 ROS 节点，占一个 ParticipantIndex；须计入 Peers 端口数
+_SLAVE_SUPERVISOR_EXTRA = 1
+# bump 后旧 /tmp/cyclonedds_nexus_cross_subnet_*.xml 不再复用，避免缺端口
+_DDS_CONFIG_PREFIX = 'cyclonedds_nexus_cross_subnet_v2_'
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # 节点列表（新增节点只需在对应列表追加一行 (package, launch_file)）
@@ -155,7 +159,7 @@ def _make_cyclonedds_xml(network_interface: str, external_ip: str,
 def _write_cyclonedds_config(xml_content: str) -> str:
     tmp = tempfile.NamedTemporaryFile(
         mode='w',
-        prefix='cyclonedds_nexus_cross_subnet_',
+        prefix=_DDS_CONFIG_PREFIX,
         suffix='.xml',
         delete=False,
     )
@@ -167,7 +171,7 @@ def _write_cyclonedds_config(xml_content: str) -> str:
 
 def _find_existing_cross_subnet_xml():
     """查找已有的 cross_subnet XML，实现多 launch 共用同一 DDS 网络。"""
-    pattern = '/tmp/cyclonedds_nexus_cross_subnet_*.xml'
+    pattern = f'/tmp/{_DDS_CONFIG_PREFIX}*.xml'
     latest = None
     for f in glob.glob(pattern):
         if 'cli' in f or 'scheduler' in f:
@@ -175,6 +179,16 @@ def _find_existing_cross_subnet_xml():
         if latest is None or os.path.getmtime(f) > os.path.getmtime(latest):
             latest = f
     return latest
+
+
+def _slave_side_participant_count(supervisor_mode: str, stack_only: str) -> int:
+    """从臂侧 DDS participant 数量（supervisor + teleop/human_data/arm_control）。"""
+    count = len(_SLAVE_NODES)
+    use_supervisor = supervisor_mode not in ('false', '0', 'no')
+    inner_stack = stack_only in ('true', '1', 'yes')
+    if use_supervisor and not inner_stack:
+        count += _SLAVE_SUPERVISOR_EXTRA
+    return count
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -349,9 +363,25 @@ def launch_setup(context, *args, **kwargs):
 
         # Local peers use loopback so co-located nodes discover each other.
         # ExternalNetworkAddress handles cross-subnet; NAT IP is not on NIC.
+        slave_participants = _slave_side_participant_count(
+            supervisor_mode, stack_only)
+        if role == 'master':
+            local_count = len(local_nodes)
+            remote_count = slave_participants
+        elif role == 'slave':
+            local_count = slave_participants
+            remote_count = len(remote_nodes)
+        else:
+            local_count = len(local_nodes)
+            remote_count = len(remote_nodes)
+
         peers_xml = _make_peers_xml(
-            len(local_nodes), len(remote_nodes), peer_ip,
+            local_count, remote_count, peer_ip,
             local_ip='127.0.0.1')
+        print(
+            f'[cross_subnet] DDS peers: local={local_count} remote={remote_count} '
+            f'(slave_participants={slave_participants}, supervisor_mode={supervisor_mode})'
+        )
 
     xml_content = _make_cyclonedds_xml(
         network_interface, external_ip, peers_xml,

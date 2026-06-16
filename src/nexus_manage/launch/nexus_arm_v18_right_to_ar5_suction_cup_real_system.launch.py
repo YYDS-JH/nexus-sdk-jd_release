@@ -13,6 +13,11 @@
 
 import os
 import tempfile
+import sys
+
+# Ensure the launch directory is on sys.path so that sibling modules
+# (e.g. slave_registry) are importable under ROS 2 Humble's loader.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction, SetEnvironmentVariable
@@ -37,8 +42,8 @@ _CYCLONEDDS_XML_TEMPLATE = """\
       <ParticipantIndex>auto</ParticipantIndex>
       <MaxAutoParticipantIndex>50</MaxAutoParticipantIndex>
       <Peers>
-        <Peer Address="10.18.20.25"/>
-        <Peer Address="10.18.64.46"/>
+        <Peer Address="192.168.9.6"/>
+        <Peer Address="192.168.9.4"/>
       </Peers>
     </Discovery>
     <Internal>

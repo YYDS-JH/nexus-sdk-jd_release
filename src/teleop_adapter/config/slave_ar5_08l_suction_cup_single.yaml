@@ -9,7 +9,7 @@
     # right_arm_port 复用为 robot_ip（AR5控制器IP地址）
     right_arm_port: '192.168.9.160'
     # 本机IP地址（用于实时数据收发）
-    right_arm_local_ip: '192.168.9.5'
+    right_arm_local_ip: '192.168.9.4'
 
     right_arm_feedback_rate: 500   # AR5 SDK力矩控制周期500Hz = 2ms
     right_arm_num_of_dofs: 8       # 7 AR5关节 + 1 吸盘关节

@@ -98,6 +98,9 @@ public:
 
     // 是否允许 marker_key 切换 gripper 值正负号（吸盘角度控制）
     bool getGripperSignFlipEnabled() const;
+    bool getGripperSuctionMode() const;
+    double getSuctionTriggerRelease() const;
+    double getSuctionTriggerSqueeze() const;
 
     // 落格流程配置
     bool getPlacementEnabled() const;

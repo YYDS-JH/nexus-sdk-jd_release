@@ -171,8 +171,9 @@ class SlaveStackSupervisor(Node):
     try:
       proc = subprocess.Popen(
           cmd,
-          stdout=subprocess.PIPE,
-          stderr=subprocess.STDOUT,
+          stdout=None,
+          stderr=None,
+          env=os.environ.copy(),
           preexec_fn=os.setsid,
           text=True,
       )
