@@ -47,6 +47,7 @@ from launch.substitutions import PathJoinSubstitution, LaunchConfiguration
 from launch_ros.substitutions import FindPackageShare
 
 from slave_registry import find_slave_by_ip, generate_peers_xml, load_registry
+from supervisor_launch import resolve_supervisor_cmd
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # 部署配置（部署前修改此处）
@@ -247,22 +248,9 @@ def _node_actions_for_role(role, args_by_pkg):
 
 
 def _supervisor_node_action(robot_id):
-    """用 share/scripts 下的 Python 启动，不依赖 libexec 可执行文件名。"""
-    from ament_index_python.packages import get_package_share_directory
     from launch.actions import ExecuteProcess
 
-    share = get_package_share_directory('nexus_manage')
-    script = os.path.join(share, 'scripts', 'slave_stack_supervisor_node.py')
-    cmd = [
-        'python3', script,
-        '--ros-args',
-        '-r', '__node:=slave_stack_supervisor',
-        '-p', 'stack_launch_package:=nexus_manage',
-        '-p', 'stack_launch_file:=slave_stack_only.launch.py',
-        '-p', 'auto_start_on_boot:=false',
-    ]
-    if robot_id:
-        cmd.extend(['-p', f'robot_id:={robot_id}', '-p', f'target_car:={robot_id}'])
+    cmd = resolve_supervisor_cmd(robot_id)
     return ExecuteProcess(cmd=cmd, output='screen', shell=False)
 
 

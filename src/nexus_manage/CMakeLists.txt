@@ -50,6 +50,12 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/config")
   )
 endif()
 
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/scripts")
+  install(DIRECTORY scripts/
+    DESTINATION share/${PROJECT_NAME}/scripts
+  )
+endif()
+
 # Export for downstream packages
 ament_export_include_directories(include)
 ament_export_libraries(state_machine_engine config_parser_component key_detector_component controller_config_component inference_config_component rotation_orthogonalizer_component rotation_mapping_component command_calculator_component teleop_manager_node)
