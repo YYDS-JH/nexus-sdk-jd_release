@@ -46,6 +46,10 @@ def resolve_supervisor_cmd(robot_id: str = '') -> list[str]:
         '-p', 'stack_launch_file:=slave_stack_only.launch.py',
         '-p', 'auto_start_on_boot:=false',
     ]
-    if robot_id:
-        ros_args.extend(['-p', f'robot_id:={robot_id}', '-p', f'target_car:={robot_id}'])
+    effective_robot_id = (robot_id or 'ar5').strip()
+    if effective_robot_id:
+        ros_args.extend([
+            '-p', f'robot_id:={effective_robot_id}',
+            '-p', f'target_car:={effective_robot_id}',
+        ])
     return entry + ros_args

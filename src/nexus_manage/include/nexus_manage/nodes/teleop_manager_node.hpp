@@ -263,6 +263,9 @@ public:
 
     void advanceBootSelfCheckToPhase2();
     bool isBootSelfCheckPhase2() const;
+    void requestBootSelfCheckPhase2TimerReset();
+    bool consumeBootSelfCheckPhase2TimerReset();
+    std::string getActiveRobotId() const;
 
     bool hasPendingRobotSwitch() const;
     void clearPendingRobotSwitch();

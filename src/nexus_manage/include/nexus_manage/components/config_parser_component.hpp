@@ -109,6 +109,7 @@ public:
     bool getPlacementConfirmReturnToIdle() const;
     bool getPlacementSchedulerHandoff() const;
     bool getSlaveStackSupervisorHandoff() const;
+    double getBootSelfCheckPhase2TimeoutSec() const;
     std::string getRciControlService() const;
 
     // 获取状态机更新频率

@@ -376,8 +376,11 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument(
             'robot_id',
-            default_value='',
-            description='Optional prefix for node name to avoid conflicts'
+            default_value='ar5',
+            description=(
+                'Robot namespace prefix (must match scheduler car and manage robot_name). '
+                'Legacy single-slave default: ar5.'
+            ),
         ),
         DeclareLaunchArgument(
             'role',

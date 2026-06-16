@@ -32,6 +32,8 @@
     # 落格确认后等待调度 connected=false mode=idle；从臂由 supervisor 杀进程
     placement_scheduler_handoff: true
     slave_stack_supervisor_handoff: true
+    # supervisor 启停从臂栈最多约 90s；Phase 2 须等从臂 controller_state
+    boot_selfcheck_phase2_timeout_sec: 90.0
     rci_control_service: "robot/rci_control"
 
     # ==================== 末端执行器配置 ====================
