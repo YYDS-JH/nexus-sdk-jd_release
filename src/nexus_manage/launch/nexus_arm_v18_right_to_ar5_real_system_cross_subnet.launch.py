@@ -246,10 +246,41 @@ def _node_actions_for_role(role, args_by_pkg):
     return _compose_launch_actions(_MASTER_NODES + _SLAVE_NODES, args_by_pkg)
 
 
+def _supervisor_node_action(robot_id):
+    from launch_ros.actions import Node
+    params = {
+        'stack_launch_package': 'nexus_manage',
+        'stack_launch_file': 'slave_stack_only.launch.py',
+        'auto_start_on_boot': False,
+    }
+    if robot_id:
+        params['robot_id'] = robot_id
+        params['target_car'] = robot_id
+    return Node(
+        package='nexus_manage',
+        executable='slave_stack_supervisor_node.py',
+        name='slave_stack_supervisor',
+        output='screen',
+        parameters=[params],
+    )
+
+
+def _resolve_stack_launch_actions(role, args_by_pkg, supervisor_mode, stack_only, robot_id):
+    use_supervisor = role == 'slave' and supervisor_mode in ('true', '1', 'yes')
+    only_stack = stack_only in ('true', '1', 'yes')
+    if use_supervisor and not only_stack:
+        return [_supervisor_node_action(robot_id)]
+    if role == 'slave' and only_stack:
+        return _compose_launch_actions(_SLAVE_NODES, args_by_pkg)
+    return _node_actions_for_role(role, args_by_pkg)
+
+
 def launch_setup(context, *args, **kwargs):
     role = LaunchConfiguration('role').perform(context).strip().lower()
     robot_id = LaunchConfiguration('robot_id').perform(context).strip()
     startup_move_to_init = LaunchConfiguration('startup_move_to_init').perform(context).strip()
+    supervisor_mode = LaunchConfiguration('supervisor_mode').perform(context).strip().lower()
+    stack_only = LaunchConfiguration('stack_only').perform(context).strip().lower()
 
     registry_path = _resolve_registry_path(context)
     slaves = load_registry(registry_path)
@@ -267,7 +298,8 @@ def launch_setup(context, *args, **kwargs):
         ]
         args_by_pkg = _launch_args_by_role(
             role, robot_id, legacy_single_slave, startup_move_to_init)
-        launch_actions = _node_actions_for_role(role, args_by_pkg)
+        launch_actions = _resolve_stack_launch_actions(
+            role, args_by_pkg, supervisor_mode, stack_only, robot_id)
         return env_actions + launch_actions
 
     # ── 无已有 XML，独立生成 ──
@@ -345,7 +377,8 @@ def launch_setup(context, *args, **kwargs):
 
     args_by_pkg = _launch_args_by_role(
         role, robot_id, legacy_single_slave, startup_move_to_init)
-    launch_actions = _node_actions_for_role(role, args_by_pkg)
+    launch_actions = _resolve_stack_launch_actions(
+        role, args_by_pkg, supervisor_mode, stack_only, robot_id)
 
     return env_actions + launch_actions
 
@@ -372,6 +405,19 @@ def generate_launch_description():
                 'Slave only: if true, MoveJ to init pose on startup (debug); '
                 'if false, keep current pose (field deployment).'
             ),
+        ),
+        DeclareLaunchArgument(
+            'supervisor_mode',
+            default_value='true',
+            description=(
+                'Slave only: if true, launch slave_stack_supervisor instead of '
+                'full teleop stack (scheduler-driven start/stop).'
+            ),
+        ),
+        DeclareLaunchArgument(
+            'stack_only',
+            default_value='false',
+            description='Internal: launch slave stack without supervisor (supervisor subprocess).',
         ),
         OpaqueFunction(function=launch_setup),
     ])

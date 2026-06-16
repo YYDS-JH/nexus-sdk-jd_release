@@ -29,8 +29,9 @@
     placement_long_press_sec: 3.0
     placement_auto_move_on_start: true
     placement_confirm_return_to_idle: true
-    # 落格确认后等待调度 mode=idle 释放 RCI；再次接管前须重走 BootSelfCheck Phase 2
+    # 落格确认后等待调度 connected=false mode=idle；从臂由 supervisor 杀进程
     placement_scheduler_handoff: true
+    slave_stack_supervisor_handoff: true
     rci_control_service: "robot/rci_control"
 
     # ==================== 末端执行器配置 ====================
@@ -65,7 +66,8 @@
     teleop_controller_config_service: "/teleop/teleop_controller_config"
 
     # ==================== 云骥反馈 (/cl/yj/operator) ====================
-    yj_operator_enabled: true
+    # slave_stack_supervisor_handoff=true 时由从臂 supervisor 发布，主控关闭
+    yj_operator_enabled: false
     yj_operator_topic: "/cl/yj/operator"
     yj_device_id: "YJ-RC-005"
     yj_target_ip: ""   # 空则使用 operator_status.ip
