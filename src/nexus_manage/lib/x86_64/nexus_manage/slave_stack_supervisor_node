@@ -58,6 +58,7 @@ class SlaveStackSupervisor(Node):
     self.declare_parameter('stack_stop_timeout_sec', 15.0)
     self.declare_parameter('publish_hz', 1.0)
     self.declare_parameter('auto_start_on_boot', False)
+    self.declare_parameter('stack_cyclonedds_uri', '')
 
     self._operator_topic = self.get_parameter('operator_status_topic').value
     self._yj_topic = self.get_parameter('yj_operator_topic').value
@@ -74,6 +75,8 @@ class SlaveStackSupervisor(Node):
     self._start_timeout = float(self.get_parameter('stack_start_timeout_sec').value)
     self._stop_timeout = float(self.get_parameter('stack_stop_timeout_sec').value)
     self._auto_start = bool(self.get_parameter('auto_start_on_boot').value)
+    self._stack_cyclonedds_uri = str(
+        self.get_parameter('stack_cyclonedds_uri').value).strip()
 
     self._phase = StackPhase.STOPPED
     self._stack_proc: Optional[subprocess.Popen] = None
@@ -95,7 +98,8 @@ class SlaveStackSupervisor(Node):
 
     self.get_logger().info(
         f'Slave stack supervisor ready: stack={self._stack_pkg}/{self._stack_launch} '
-        f'robot_id={self._robot_id or "(default)"} rci={self._rci_service}')
+        f'robot_id={self._robot_id or "(default)"} rci={self._rci_service} '
+        f'stack_dds={self._stack_cyclonedds_uri or "(inherit)"}')
 
     if self._auto_start:
       self.get_logger().warn('auto_start_on_boot=true: starting slave stack immediately')
@@ -168,12 +172,20 @@ class SlaveStackSupervisor(Node):
       cmd.append(f'robot_id:={self._robot_id}')
 
     self.get_logger().info(f'Starting slave stack: {" ".join(cmd)}')
+    env = os.environ.copy()
+    if self._stack_cyclonedds_uri:
+        stack_uri = self._stack_cyclonedds_uri
+        if not stack_uri.startswith('file://'):
+            stack_uri = 'file://' + stack_uri
+        env['CYCLONEDDS_URI'] = stack_uri
+        env.setdefault('ROS_DOMAIN_ID', '18')
+        env.setdefault('RMW_IMPLEMENTATION', 'rmw_cyclonedds_cpp')
     try:
       proc = subprocess.Popen(
           cmd,
           stdout=None,
           stderr=None,
-          env=os.environ.copy(),
+          env=env,
           preexec_fn=os.setsid,
           text=True,
       )
