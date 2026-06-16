@@ -16,7 +16,7 @@ def generate_launch_description():
         DeclareLaunchArgument('auto_start_on_boot', default_value='false'),
         Node(
             package='nexus_manage',
-            executable='slave_stack_supervisor_node.py',
+            executable='slave_stack_supervisor_node',
             name='slave_stack_supervisor',
             output='screen',
             parameters=[{

@@ -258,7 +258,7 @@ def _supervisor_node_action(robot_id):
         params['target_car'] = robot_id
     return Node(
         package='nexus_manage',
-        executable='slave_stack_supervisor_node.py',
+        executable='slave_stack_supervisor_node',
         name='slave_stack_supervisor',
         output='screen',
         parameters=[params],
