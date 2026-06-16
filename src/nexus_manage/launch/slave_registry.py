@@ -57,9 +57,15 @@ def load_registry(path):
             data = yaml.safe_load(f)
     except FileNotFoundError:
         return []
-    if data is None:
+    if not isinstance(data, dict):
         return []
-    return data.get('slaves', [])
+    slaves = data.get('slaves', [])
+    if slaves is None:
+        return []
+    if not isinstance(slaves, list):
+        return []
+    # Ignore malformed entries (e.g. slaves: "[]" or list of bare strings).
+    return [entry for entry in slaves if isinstance(entry, dict)]
 
 
 def generate_peers_xml(slaves, local_count, remote_count, port_base,

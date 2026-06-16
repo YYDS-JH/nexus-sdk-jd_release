@@ -241,13 +241,16 @@ public:
      * 使用场景：空闲状态（TELEOP_IDLE）和故障状态（TELEOP_FAULT）
      * 
      * 功能：
-     * - 计算低刚度、适度阻尼的控制命令
-     * - 使机械臂保持当前位置但允许被动移动
-     * 
-     * @param current_joint_state 当前关节状态
+     * - IDLE：hold_position 非空时固定 q_cmd（Kp 抗慢漂）
+     * - FAULT：hold_position 为空时 q_cmd 跟随反馈（纯阻尼）
+     *
+     * @param current_joint_state 当前关节状态（速度/力矩仍来自反馈）
+     * @param hold_position 锁定的目标位置；nullptr 则 q_cmd=当前位置
      * @return MitControlCommand 阻尼控制命令
      */
-    MitControlCommand computeDampingCommand(const JointState& current_joint_state);
+    MitControlCommand computeDampingCommand(
+        const JointState& current_joint_state,
+        const std::vector<double>* hold_position = nullptr);
 
     /**
      * @brief 获取控制器状态
@@ -365,6 +368,13 @@ public:
     CartesianForce computeIkBoundaryForce(
         const JointState& current_joint_state,
         const Eigen::Matrix4d& desired_pose) const;
+
+    /**
+     * @brief 复位后将 IK 配置同步到运行时 RobotModel（如 vqp_arm_angle_ref_joint_positions）
+     *
+     * controller_params_ 在 CMD_SET_RESET_POSITION 中更新后须调用，否则 IK 仍用 initialize 时的副本。
+     */
+    void updateRuntimeIkConfig(const IKConfig& ik_config);
 
 private:
     struct Impl;

@@ -12,7 +12,12 @@
   # 注意：role=master 时 robot_id 参数被忽略，
   # nexus_manage 通过 switchToRobot() 在运行时动态路由到不同从臂。
 
-  # === Slave 侧（每台 AR5 AGX Orin 各启动一次）===
+  # === Legacy 单臂（slave_registry.yaml 中 slaves: []）===
+  ros2 launch nexus_manage nexus_arm_v18_right_to_ar5_real_system_cross_subnet.launch.py role:=slave
+  ros2 launch nexus_manage nexus_arm_v18_right_to_ar5_real_system_cross_subnet.launch.py role:=slave startup_move_to_init:=true
+  ros2 launch nexus_manage nexus_arm_v18_right_to_ar5_real_system_cross_subnet.launch.py role:=master
+
+  # === 多从臂（registry + robot_id + scheduler car 三者一致）===
   ros2 launch nexus_manage nexus_arm_v18_right_to_ar5_real_system_cross_subnet.launch.py role:=slave robot_id:=ar5_01
   ros2 launch nexus_manage nexus_arm_v18_right_to_ar5_real_system_cross_subnet.launch.py role:=slave robot_id:=ar5_02
   # robot_id 必须与 slave_registry.yaml 中对应从臂的 id 字段一致，
@@ -36,7 +41,7 @@ import tempfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction, SetEnvironmentVariable
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction, SetEnvironmentVariable, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import PathJoinSubstitution, LaunchConfiguration
 from launch_ros.substitutions import FindPackageShare
@@ -50,18 +55,19 @@ from slave_registry import find_slave_by_ip, generate_peers_xml, load_registry
 _DOMAIN_ID = '18'
 
 # Master 侧（外网，Nexus-Arm 端）
-_MASTER_NETWORK_INTERFACE = "enp2s0"
-_MASTER_EXTERNAL_IP = "10.18.16.30"
+_MASTER_NETWORK_INTERFACE = "wlo1"
+_MASTER_EXTERNAL_IP = "10.18.20.25"
 
-# Slave 侧（AGV 内网，AR5 端）
-_SLAVE_NETWORK_INTERFACE = "enp2s0"
-_SLAVE_EXTERNAL_IP = "10.18.16.18"
+# Slave 侧（AGV 内网，AR5 Orin 端）
+_SLAVE_NETWORK_INTERFACE = "mgbe1"
+_SLAVE_EXTERNAL_IP = "10.18.21.24"
 
 # DDS 端口基数（主从共用）
 _PORT_BASE = 7000
 
 # ParticipantIndex 最大分配值（预留余量，避免加节点后改路由器转发规则）
 _MAX_AUTO_PARTICIPANT_INDEX = 50
+_NEXUS_MANAGE_START_DELAY_SEC = 8.0
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # 节点列表（新增节点只需在对应列表追加一行 (package, launch_file)）
@@ -184,15 +190,70 @@ def _include(package: str, launch_file: str, launch_arguments=None):
         ]),
         **kwargs
     )
+
+
+def _compose_launch_actions(node_specs, launch_args_by_pkg=None):
+    """Include node launches; delay nexus_manage like legacy cross-subnet."""
+    launch_args_by_pkg = launch_args_by_pkg or {}
+    regular_actions = []
+    delayed_manage_action = None
+
+    for pkg, launch_file in node_specs:
+        launch_args = launch_args_by_pkg.get(pkg)
+        action = _include(pkg, launch_file, launch_args)
+        if pkg == 'nexus_manage':
+            delayed_manage_action = TimerAction(
+                period=_NEXUS_MANAGE_START_DELAY_SEC,
+                actions=[action],
+            )
+        else:
+            regular_actions.append(action)
+
+    if delayed_manage_action is not None:
+        regular_actions.append(delayed_manage_action)
+
+    return regular_actions
+
+
 def _resolve_registry_path(context):
     return PathJoinSubstitution([
         FindPackageShare('nexus_manage'), 'config', 'slave_registry.yaml',
     ]).perform(context)
 
 
+def _launch_args_by_role(role, robot_id, legacy_single_slave, startup_move_to_init):
+    args_by_pkg = {}
+    if role == 'slave':
+        teleop_args = {'startup_move_to_init': startup_move_to_init}
+        if robot_id:
+            teleop_args['robot_id'] = robot_id
+            for pkg, _ in _SLAVE_NODES:
+                if pkg != 'teleop_adapter':
+                    args_by_pkg[pkg] = {'robot_id': robot_id}
+        args_by_pkg['teleop_adapter'] = teleop_args
+    if role == 'master' and legacy_single_slave:
+        args_by_pkg['nexus_manage'] = {
+            'boot_selfcheck_await_scheduler': 'false',
+        }
+    return args_by_pkg
+
+
+def _node_actions_for_role(role, args_by_pkg):
+    if role == 'master':
+        return _compose_launch_actions(_MASTER_NODES, args_by_pkg)
+    if role == 'slave':
+        return _compose_launch_actions(_SLAVE_NODES, args_by_pkg)
+    return _compose_launch_actions(_MASTER_NODES + _SLAVE_NODES, args_by_pkg)
+
+
 def launch_setup(context, *args, **kwargs):
     role = LaunchConfiguration('role').perform(context).strip().lower()
     robot_id = LaunchConfiguration('robot_id').perform(context).strip()
+    startup_move_to_init = LaunchConfiguration('startup_move_to_init').perform(context).strip()
+
+    registry_path = _resolve_registry_path(context)
+    slaves = load_registry(registry_path)
+    legacy_single_slave = not slaves
 
     # ── 优先复用已有 cross_subnet XML，保证多 launch 共享同一 DDS 网络 ──
     existing_xml = _find_existing_cross_subnet_xml()
@@ -204,27 +265,12 @@ def launch_setup(context, *args, **kwargs):
             SetEnvironmentVariable('CYCLONEDDS_URI',
                                    'file://' + existing_xml),
         ]
-        launch_args = {'robot_id': robot_id} if (role != 'master' and robot_id) else None
-        if role == 'master':
-            launch_actions = [
-                _include(pkg, lf, launch_args) for pkg, lf in _MASTER_NODES
-            ]
-        elif role == 'slave':
-            launch_actions = [
-                _include(pkg, lf, launch_args) for pkg, lf in _SLAVE_NODES
-            ]
-        else:
-            launch_actions = [
-                _include(pkg, lf, launch_args)
-                for pkg, lf in (_MASTER_NODES + _SLAVE_NODES)
-            ]
+        args_by_pkg = _launch_args_by_role(
+            role, robot_id, legacy_single_slave, startup_move_to_init)
+        launch_actions = _node_actions_for_role(role, args_by_pkg)
         return env_actions + launch_actions
 
     # ── 无已有 XML，独立生成 ──
-
-    # Attempt to load slave registry
-    registry_path = _resolve_registry_path(context)
-    slaves = load_registry(registry_path)
 
     if slaves:
         # ── Multi-slave mode ──
@@ -242,7 +288,7 @@ def launch_setup(context, *args, **kwargs):
                 local_count=len(_MASTER_NODES),
                 remote_count=len(_SLAVE_NODES),
                 port_base=_PORT_BASE,
-                local_ip=_MASTER_EXTERNAL_IP,
+                local_ip='127.0.0.1',
             )
         elif role == 'slave':
             matched = find_slave_by_ip(slaves)
@@ -256,7 +302,7 @@ def launch_setup(context, *args, **kwargs):
             remote_nodes = _MASTER_NODES
             peers_xml = _make_peers_xml(
                 len(_SLAVE_NODES), len(_MASTER_NODES), _MASTER_EXTERNAL_IP,
-                local_ip=external_ip)
+                local_ip='127.0.0.1')
         else:
             raise RuntimeError(f'Unknown role: {role}')
     else:
@@ -280,10 +326,11 @@ def launch_setup(context, *args, **kwargs):
             local_nodes = _MASTER_NODES + _SLAVE_NODES
             remote_nodes = []
 
-        local_ip = external_ip if external_ip else '127.0.0.1'
+        # Local peers use loopback so co-located nodes discover each other.
+        # ExternalNetworkAddress handles cross-subnet; NAT IP is not on NIC.
         peers_xml = _make_peers_xml(
             len(local_nodes), len(remote_nodes), peer_ip,
-            local_ip=local_ip)
+            local_ip='127.0.0.1')
 
     xml_content = _make_cyclonedds_xml(
         network_interface, external_ip, peers_xml,
@@ -296,23 +343,9 @@ def launch_setup(context, *args, **kwargs):
         SetEnvironmentVariable('CYCLONEDDS_URI', 'file://' + cyclonedds_xml_path),
     ]
 
-    # Master role: nexus_manage handles multi-slave via dynamic switchToRobot(),
-    # so robot_id must NOT be baked into node names at launch time.
-    launch_args = {'robot_id': robot_id} if (role != 'master' and robot_id) else None
-
-    if role == 'master':
-        launch_actions = [
-            _include(pkg, launch_file, launch_args) for pkg, launch_file in _MASTER_NODES
-        ]
-    elif role == 'slave':
-        launch_actions = [
-            _include(pkg, launch_file, launch_args) for pkg, launch_file in _SLAVE_NODES
-        ]
-    else:
-        launch_actions = [
-            _include(pkg, launch_file, launch_args)
-            for pkg, launch_file in (_MASTER_NODES + _SLAVE_NODES)
-        ]
+    args_by_pkg = _launch_args_by_role(
+        role, robot_id, legacy_single_slave, startup_move_to_init)
+    launch_actions = _node_actions_for_role(role, args_by_pkg)
 
     return env_actions + launch_actions
 
@@ -331,6 +364,14 @@ def generate_launch_description():
                 'Launch role: "slave" (AR5 side), "master" (Nexus-Arm side), '
                 'or empty string to launch all components on a single machine.'
             )
+        ),
+        DeclareLaunchArgument(
+            'startup_move_to_init',
+            default_value='false',
+            description=(
+                'Slave only: if true, MoveJ to init pose on startup (debug); '
+                'if false, keep current pose (field deployment).'
+            ),
         ),
         OpaqueFunction(function=launch_setup),
     ])

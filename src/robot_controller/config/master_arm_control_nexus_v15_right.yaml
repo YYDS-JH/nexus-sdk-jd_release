@@ -10,12 +10,12 @@
       # 控制频率参数
       control_publish_rate: 500      # 控制命令发布频率 (Hz)
       state_publish_rate: 10          # 节点状态发布频率 (Hz)
-      # Teleop 管理器状态话题（用于 suspend 期间禁用力反馈）
+      # Teleop 管理器状态话题（仅在 TeleopRunning 期间启用力反馈）
       teleop_manager_state_topic: "/teleop/teleop_manager_state"
 
       # 主臂力反馈增益（从臂外力估计 × ee_ff_gain → 主臂关节力矩）
-      ee_ff_gain: 0.6
-      # 力反馈 xy 旋转由从臂 publish 前完成（ee_ff_rotation_z_auto）；主臂此处保持 0，避免双重旋转
+      ee_ff_gain: 0.0
+      # 力反馈 xy 旋转由从臂 publish 前完成（ee_ff_rotation_z_auto）；主臂侧保持 0 避免双重旋转
       # ee_ff_rotation_z_deg: 0.0
 
       ee_ff_static_friction_margin: [0.2, 0.2, 0.2, 0.2, 0.2, 0.2]
@@ -40,22 +40,24 @@
 
       # === 电机参数（仅针对arm的arm_dof个关节）===
       motor_params:
-        rotor_inertia: [0.00002, 0.00002, 0.00002, 0.0000087, 0.0000087, 0.0000087]  # 电机转子惯量 (kg·m²)
-        gear_ratio: [40.0, 40.0, 40.0, 7.0, 7.0, 7.0]    # 减速比
+        rotor_inertia: [0.0000087, 0.00002, 0.0000087, 0.0000087, 0.0000087, 0.0000087]  # 电机转子惯量 (kg·m²)
+        gear_ratio: [10.0, 40.0, 10.0, 7.0, 7.0, 7.0]    # 减速比
 
       # === Nexus 专用：摩擦补偿参数（独立命名空间，避免被其他机型复用）===
       nexus_friction:
-        friction_velocity_threshold: 0.02  # (rad/s) 只有当速度绝对值大于此阈值时才应用摩擦补偿
+        friction_coulomb_file: "package://robot_controller/specs/friction_coulomb_nexus_v15.txt"
+        friction_velocity_threshold: [0.2, 0.015, 0.1, 0.1, 0.1, 0.1]  # (rad/s) 每关节独立速度阈值，长度=arm_dof
         friction_tanh_velocity_scale: 1.0 # tanh过渡速度尺度系数：scale 越大过渡越快（越大起步越"轻"，但更可能抖）
-        velocity_sign_history_size: 10     # 速度符号历史队列大小，用于去抖动（队列符号一致才补偿）
-        friction_compensation_gain: [0.9, 0.9, 0.9, 0.0, 0.0, 0.2]    # (0-1) 每关节增益（长度=6）
+        velocity_sign_history_size: [10, 4, 10, 10, 10, 10]     # 每关节速度符号历史队列大小，长度=arm_dof
+        velocity_filter_alphas: [0.485, 0.8, 0.485, 0.485, 0.485, 0.485]  # 每关节独立滤波系数（0~1），长度=arm_dof
+        friction_compensation_gain: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]    # (0-1) 每关节增益（长度=6）
         friction_compensation_cartesian_error_threshold_full: 0.01   # (m) 笛卡尔全补偿误差阈值（大于该值全开）
         friction_compensation_cartesian_error_threshold_zero: 0.002  # (m) 笛卡尔零补偿误差阈值（小于该值全关）
         # 原有"力反馈抬升过静摩擦"逻辑，默认关闭
-        enable_ee_ff_static_friction_lift: false
+        enable_ee_ff_static_friction_lift: true
         # 静摩擦方波补偿：静止时施加高频正负方波，幅值 = 库仑摩擦值 × amplitude_scale（每关节可调）
-        static_friction_compensation_amplitude_scale: [0.0, 0.8, 0.8, 0.0, 0.0, 0.0]   # 每关节方波幅值系数
-        static_friction_compensation_frequency: [50.0, 20.0, 20.0, 50.0, 50.0, 50.0]   # 每关节方波频率 (Hz)
+        static_friction_compensation_amplitude_scale: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]   # 每关节方波幅值系数
+        static_friction_compensation_frequency: [50.0, 10.0, 20.0, 50.0, 50.0, 50.0]   # 每关节方波频率 (Hz)
 
       # === 运动规划类型配置 ===
       motion_planning_type: 2  # 0: INTERPOLATE (线性插值), 1: SCURVE (S曲线)
@@ -64,8 +66,8 @@
       # Kp - 位置刚度（较小值，允许位置偏差）
       gravity_comp_kp: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
-      # Kd - 速度阻尼（提供阻尼，避免振荡）
-      gravity_comp_kd: [0.1, 0.1, 0.1, 0.6, 0.5, 0.5]
+      # Kd - 速度阻尼（负值=辅助运动方向，补偿摩擦；正值=阻碍运动，提供阻尼）
+      gravity_comp_kd: [0.0, -1.0, 0.0, 0.0, 0.0, 0.0]
 
       # 力反馈激活时附加关节阻尼（仅主臂 MODE_SCALING/forceFeedback 生效）
       # 力反馈或边界力非零时叠加到 cmd.kd，为零时自动解除
@@ -105,7 +107,11 @@
       # cart_imped_kd: [5.0, 5.0, 5.0, 0.1, 0.1, 0.1]
 
       # === 对角化阻尼配置 ===
-      enable_double_diag_damping: true  # 是否启用双对角化阻尼，false时使用常规对角阻尼
+      enable_double_diag_damping_joint: true       # 关节空间是否启用双对角化阻尼
+      enable_double_diag_damping_cartesian: true   # 笛卡尔空间是否启用双对角化阻尼
+
+      # 非线性补偿开关（仅影响 computeIncrementalSpringControl 中的 g(q)+C(q,v)*v）
+      enable_nonlinear_compensation: true
 
       # === PID积分控制参数（消除静态误差）===
       enable_integral_control: true                              # 是否启用积分控制

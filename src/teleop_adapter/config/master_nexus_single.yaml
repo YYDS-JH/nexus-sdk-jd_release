@@ -1,4 +1,4 @@
-master_nexus_adapter:
+/**:
   ros__parameters:
     # robot name，用来作为 topic 前缀，比如 /my_robot/rt/teleop/...
     robot_name: "nexus_arm_master"

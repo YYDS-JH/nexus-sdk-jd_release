@@ -104,6 +104,11 @@ public:
     double getPlacementMoveTimeoutSec() const;
     double getPlacementReleaseHoldSec() const;
     double getPlacementPositionTolerance() const;
+    double getPlacementLongPressSec() const;
+    bool getPlacementAutoMoveOnStart() const;
+    bool getPlacementConfirmReturnToIdle() const;
+    bool getPlacementSchedulerHandoff() const;
+    std::string getRciControlService() const;
 
     // 获取状态机更新频率
     double getStateMachineRate() const;

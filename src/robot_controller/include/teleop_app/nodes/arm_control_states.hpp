@@ -76,7 +76,19 @@ public:
 private:
     void controllerThreadFunc(int controller_index);
     void forcePublishThreadFunc(int controller_index);
-    
+
+    /**
+     * @brief 从当前实际关节角同步 vqp 臂角参考与力反馈旋转角（进入 TELEOP_RUN 时调用）
+     *
+     * 读取 latest_joint_state_per_controller_ 中各臂当前关节角，
+     * 更新 controller_params_ 中的 vqp_arm_angle_ref_joint_positions
+     * 与 ee_ff_rotation_z_deg，并推送到运行时 IK 求解器。
+     *
+     * 设计目的：消除对 nexus_manage captureSlaveJointPositions() 时序的依赖，
+     * 让 arm_control_node 自治决定臂角参考与力反馈坐标系。
+     */
+    void captureVqpRefFromCurrentJoints();
+
     ArmControlNode* node_;
     std::vector<std::shared_ptr<std::thread>> controller_threads_;
     std::vector<std::shared_ptr<std::thread>> force_publish_threads_;

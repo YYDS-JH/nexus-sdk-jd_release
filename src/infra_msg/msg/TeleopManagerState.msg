@@ -15,6 +15,7 @@ uint8 STATE_TELEOP_PAUSED = 6
 uint8 STATE_FAULT = 7
 uint8 STATE_MODEL_INFERENCE = 8
 uint8 STATE_PLACEMENT = 9
+uint8 STATE_AWAIT_CONTROL_RELEASE = 10
 
 # 状态名称(字符串形式，便于调试)
 string state_name

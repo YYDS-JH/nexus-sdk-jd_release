@@ -47,6 +47,10 @@ public:
     void writeThreadFunc() override;
     void shutdown();
 
+    bool releaseRtControl() override;
+    bool acquireRtControl() override;
+    bool isRtControlActive() const override;
+
 private:
     struct Impl;
     std::unique_ptr<Impl> impl_;

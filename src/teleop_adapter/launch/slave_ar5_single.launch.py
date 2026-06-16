@@ -27,9 +27,13 @@ def launch_setup(context, *args, **kwargs):
     existing_ld = os.environ.get('LD_LIBRARY_PATH', '')
     ld_path = pkg_lib + ':' + existing_ld if existing_ld else pkg_lib
 
+    startup_move_to_init = LaunchConfiguration('startup_move_to_init').perform(context).strip().lower()
+    move_to_init = startup_move_to_init in ('1', 'true', 'yes', 'on')
+
     params = [config_file]
     if robot_id:
         params.append({"robot_name": robot_id})
+    params.append({"right_arm_startup_move_to_init": move_to_init})
 
     node = Node(
         package='teleop_adapter',
@@ -50,6 +54,14 @@ def generate_launch_description():
             'robot_id',
             default_value='',
             description='Optional prefix for node name to avoid conflicts'
+        ),
+        DeclareLaunchArgument(
+            'startup_move_to_init',
+            default_value='false',
+            description=(
+                'If true, MoveJ to init pose on startup (debug); '
+                'if false, keep current pose (field deployment)'
+            ),
         ),
         OpaqueFunction(function=launch_setup),
     ])

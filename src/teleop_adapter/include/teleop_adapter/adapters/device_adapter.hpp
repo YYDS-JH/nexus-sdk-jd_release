@@ -159,6 +159,11 @@ public:
     // 外部力/力矩（基坐标系 [Fx,Fy,Fz,Tx,Ty,Tz]，默认不支持）
     virtual bool readExternalWrench(std::array<double, 6>& wrench);
     
+    // AR5 RCI 占用/释放（默认无操作；AR5 适配器覆写）
+    virtual bool releaseRtControl();
+    virtual bool acquireRtControl();
+    virtual bool isRtControlActive() const;
+    
     // 设备管理
     DeviceStatus getDeviceStatus() const;
     DeviceAdapterConfig getConfig() const;
@@ -179,6 +184,10 @@ protected:
     void setDeviceStatus(const DeviceStatus& status);
     void setError(int error_code, const std::string& error_message);
     void clearError();
+    /** RCI 暂停：保持连接在线，避免 arm_control 误判 OFFLINE */
+    void markRtControlPaused();
+    /** RCI 恢复：重置连接监控并恢复 NORMAL */
+    void markRtControlActive();
 
     // 子类需要访问的成员
     DeviceAdapterConfig config_;

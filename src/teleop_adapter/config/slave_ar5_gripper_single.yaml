@@ -1,4 +1,4 @@
-slave_arm_adapter:
+/**:
   ros__parameters:
     # robot name，用来作为 topic 前缀，比如 /ar5/robot/joint_cmd
     robot_name: "ar5"

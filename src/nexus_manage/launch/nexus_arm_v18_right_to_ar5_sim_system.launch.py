@@ -56,17 +56,18 @@ def generate_launch_description():
         launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
         )
     
-    gripper_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([
-            PathJoinSubstitution([
-                FindPackageShare('gripper_keyboard'),
-                'launch',
-                'nexus-arm_left_gripper.launch.py'
-            ])
-        ]),
-        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
-        )
-    
+    # JD 分支不带吸盘，暂不需要 gripper_keyboard
+    # gripper_launch = IncludeLaunchDescription(
+    #     PythonLaunchDescriptionSource([
+    #         PathJoinSubstitution([
+    #             FindPackageShare('gripper_keyboard'),
+    #             'launch',
+    #             'nexus-arm_left_gripper.launch.py'
+    #         ])
+    #     ]),
+    #     launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
+    #     )
+
     master_controller_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             PathJoinSubstitution([
@@ -111,7 +112,7 @@ def generate_launch_description():
         nexus_arm_sim_launch,
         ar5_human_data_solver_launch,
         nexus_arm_human_data_solver_launch,
-        gripper_launch,
+        # gripper_launch,
         master_controller_launch,
         slave_controller_launch,
         manager_launch,

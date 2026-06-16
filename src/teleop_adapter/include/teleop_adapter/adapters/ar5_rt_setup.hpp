@@ -23,6 +23,8 @@ struct Config {
     std::array<double, 7> fc_gain{};
     int movej_speed{600};
     bool prefer_robot_toolset{true};
+    /** If true, MoveJ to init_joint_positions during deviceHandshake (debug). */
+    bool startup_move_to_init{false};
 
     Config() {
         fc_friction.fill(0.1);

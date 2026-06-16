@@ -59,6 +59,7 @@ namespace Events {
     const std::string PLACEMENT_CONFIRM = "placement_confirm";
     const std::string PLACEMENT_ABORT = "placement_abort";
     const std::string PLACEMENT_FAILURE = "placement_failure";
+    const std::string SCHEDULER_MODE_IDLE = "scheduler_mode_idle";
 }
 
 /**
@@ -78,6 +79,7 @@ namespace StateNames {
     const std::string FAULT = "Fault";
     const std::string MODEL_INFERENCE = "ModelInference";
     const std::string PLACEMENT = "Placement";
+    const std::string AWAIT_CONTROL_RELEASE = "AwaitControlRelease";
 }
 
 /*******************************************************************************
@@ -106,10 +108,12 @@ private:
     bool self_check_passed_{false};
     bool capture_done_{false};
     bool idle_sent_for_switch_{false};
+    bool phase2_started_{false};
     
     // 自检步骤函数
     bool checkConfiguration();
     bool checkControllerServices();
+    bool checkTeleopControllerService();
     bool checkTeleopData();
     bool checkControllerStates();
     bool checkHumanDataMessages();
@@ -290,8 +294,25 @@ private:
 };
 
 /**
+  * @brief  落格确认后等待调度 mode=idle 释放 RCI
+  */
+class AwaitControlReleaseState : public robot_sdk::IState {
+public:
+    explicit AwaitControlReleaseState(std::shared_ptr<TeleopManagerNode> node);
+
+    std::string name() const override { return StateNames::AWAIT_CONTROL_RELEASE; }
+    void on_entry() override;
+    void on_exit() override;
+    void on_update() override;
+    std::string handle_event(const std::string& event) override;
+
+private:
+    std::shared_ptr<TeleopManagerNode> node_;
+};
+
+/**
   * @brief  Placement 状态：落格流程（移动→释放吸盘→等待确认）
-  * @usage  按住 take_over_key 落格运动，松开暂停，再按继续；到位后 data_collect_key 确认退出
+  * @usage  PositionHold 下长按 take_over_key 进入；可配置自动 MoveJ；data_collect_key 确认后进 Idle
   */
 class PlacementState : public robot_sdk::IState {
 public:
@@ -320,10 +341,14 @@ private:
     void sendPlacementMoveRequest();
     void sendSlaveRunningRequest();
     void pausePlacementMove();
+    void logPlacementProgressThrottled();
     bool checkPlacementPositionReached() const;
     bool jointPosCheck(const std::vector<double>& current_pos,
                        const std::vector<double>& target_pos,
                        double tolerance) const;
+    static const char* phaseToString(Phase phase);
+
+    rclcpp::Time last_progress_log_time_;
 };
 
 /*******************************************************************************

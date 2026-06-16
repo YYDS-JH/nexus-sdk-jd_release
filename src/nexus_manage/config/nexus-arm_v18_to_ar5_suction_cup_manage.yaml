@@ -28,6 +28,10 @@
     placement_move_timeout_sec: 30.0
     placement_release_hold_sec: 0.5
     placement_position_tolerance: 0.10
+    # PositionHold 下长按 take_over_key（按键5）触发；进入后自动 MoveJ；确认后进 Idle 释放主从控制权
+    placement_long_press_sec: 3.0
+    placement_auto_move_on_start: true
+    placement_confirm_return_to_idle: true
 
     # ==================== 末端执行器配置 ====================
     # AR5 带吸盘：right_end_effector 为吸盘旋转角(rad), nexus_manage 透传
@@ -36,7 +40,7 @@
         type: "ee"
         teleop_pos_values: [0.0, -0.65, 0.47, 0.49, -0.17, 0.18]
         robot_pos_values: [-1.57, 0.52, 0.0, 1.05, 0.0, 0.0, 0.0]
-        placement_robot_pos_values: [-1.57, 0.52, 0.0, 0.52, 0.0, 0.0, 0.0]
+        placement_robot_pos_values: [0.0, 0.52, 0.0, 1.05, 0.0, 0.4, 0.0]
       right_end_effector:
         type: "gripper"
         teleop_pos_values: [0.0]
@@ -60,3 +64,9 @@
     # ==================== ROS2 Service 配置 ====================
     robot_controller_config_service: "/robot/robot_controller_config"
     teleop_controller_config_service: "/teleop/teleop_controller_config"
+
+    # ==================== 云骥反馈 (/cl/yj/operator) ====================
+    yj_operator_enabled: true
+    yj_operator_topic: "/cl/yj/operator"
+    yj_device_id: "YJ-RC-005"
+    yj_target_ip: ""

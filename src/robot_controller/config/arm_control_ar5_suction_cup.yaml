@@ -190,7 +190,7 @@
         vqp_arm_angle_weight: 0.03
         vqp_arm_angle_kp: 1.5
         vqp_arm_angle_ref_policy: user_specified        # q_ref / initial / user_specified
-        vqp_arm_angle_ref_joint_positions: [-1.57, 0.2, 0.0, 2.0, 0.0, 0.0, 0.0]
+        vqp_arm_angle_ref_joint_positions: [-1.57, 0.52, 0.0, 1.05, 0.0, 0.0, 0.0]
         vqp_arm_angle_user_ref: 0.0            # policy=user_specified 时，在参考平面上的额外角度偏置(rad)
         vqp_arm_angle_limit_enable: true
         vqp_arm_angle_min: -0.3                # 相对参考平面允许的最小臂角(rad)
@@ -345,7 +345,9 @@
 
       # --- 阻尼持位（TELEOP_IDLE / TELEOP_FAULT）---
       damping_control_kp: [20.0, 20.0, 20.0, 20.0, 10.0, 10.0, 10.0]
-      damping_control_kd: [10.0, 10.0, 10.0, 10.0, 5.0, 5.0, 5.0]
+      damping_control_kd: [20.0, 20.0, 15.0, 15.0, 8.0, 8.0, 8.0]
+      damping_hold_latch: true
+      damping_hold_latch_delay: 0.5
       
       # --- 关节空间积分 PID ---
       enable_integral_control: false

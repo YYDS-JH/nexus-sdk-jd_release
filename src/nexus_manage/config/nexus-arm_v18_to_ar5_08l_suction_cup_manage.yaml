@@ -35,7 +35,7 @@
         type: "ee"
         teleop_pos_values: [0.0, -0.65, 0.47, 0.49, -0.17, 0.18]
         robot_pos_values: [-1.57, 0.52, 0.0, 1.05, 0.0, 0.0, 0.0]
-        placement_robot_pos_values: [-1.57, 0.52, 0.0, 0.52, 0.0, 0.0, 0.0]
+        placement_robot_pos_values: [0.0, 0.52, 0.0, 1.05, 0.0, 0.4, 0.0]
       right_end_effector:
         type: "gripper"
         teleop_pos_values: [0.0]

@@ -51,6 +51,7 @@ struct AggregatedKeyState {
     
     // 长按持续时间(秒)
     double teleop_duration{0.0};
+    double take_over_duration{0.0};
 };
 
 /*******************************************************************************
@@ -137,7 +138,7 @@ public:
       * @retval 如果按键按下时间超过阈值返回true
       * @usage  
       */
-    bool detectLongPress(const std::string& key_name, double duration) const;
+    bool detectLongPress(const std::string& key_name, double duration);
     
     /**
       * @brief  更新长按检测（需要周期调用）

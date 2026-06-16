@@ -50,6 +50,7 @@ class TeleopPausedState;
 class FaultState;
 class ModelInferenceState;
 class PlacementState;
+class AwaitControlReleaseState;
 } // namespace states
 
 /**
@@ -266,6 +267,17 @@ public:
     bool hasPendingRobotSwitch() const;
     void clearPendingRobotSwitch();
 
+    bool isSchedulerTeleopAllowed() const;
+    void setSchedulerTeleopAllowed(bool allowed);
+    bool isResetBlockedByScheduler() const;
+    bool isSchedulerReinitRequired() const;
+    void clearSchedulerReinitRequired();
+    bool releaseSlaveRci();
+    bool acquireSlaveRci();
+    void setYjTaskState(const std::string& state);
+    void captureSlaveJointPositionsFromLiveData();
+    void syncCommandCalculatorInitialPoses();
+
 private:
     struct Impl;
     std::unique_ptr<Impl> impl_;
@@ -280,6 +292,7 @@ private:
     friend class states::FaultState;
     friend class states::ModelInferenceState;
     friend class states::PlacementState;
+    friend class states::AwaitControlReleaseState;
 };
 
 /*******************************************************************************

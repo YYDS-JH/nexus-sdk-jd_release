@@ -102,9 +102,8 @@ struct ArmController::Impl {
     Eigen::VectorXd friction_coulomb_{Eigen::VectorXd::Zero(0)};
     Eigen::VectorXd filtered_velocity_{Eigen::VectorXd::Zero(0)};
     bool velocity_filter_initialized_{false};
-    double velocity_filter_alpha_{0.485};
-    double last_filter_update_time_sec_{0.0};
-    double friction_velocity_threshold_{0.01};
+    std::vector<double> velocity_filter_alphas_;
+    std::vector<double> friction_velocity_threshold_;
     std::vector<std::deque<int>> velocity_sign_history_;
 
     double current_control_time_sec_{0.0};
@@ -129,7 +128,7 @@ struct ArmController::Impl {
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr debug_force_tau_ext_pub_;
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr debug_force_tau_comp_pub_;
 
-    int velocity_sign_history_size_{10};
+    std::vector<int> velocity_sign_history_size_;
     double m_t{0.0};
     Eigen::Matrix4d desired_pose_init;
 

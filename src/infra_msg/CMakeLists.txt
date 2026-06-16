@@ -33,6 +33,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/CollectorService.srv"
   "srv/InferenceConfig.srv"
   "srv/SetOperatorStatus.srv"
+  "srv/RciControl.srv"
   DEPENDENCIES 
   std_msgs
   builtin_interfaces
