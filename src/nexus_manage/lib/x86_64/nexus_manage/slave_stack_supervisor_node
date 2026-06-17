@@ -25,8 +25,9 @@ from rclpy.node import Node
 from std_msgs.msg import String
 
 try:
-    from infra_msg.srv import RciControl
+    from infra_msg.srv import ControllerConfig, RciControl
 except ImportError:  # pragma: no cover
+    ControllerConfig = None
     RciControl = None
 
 OPERATOR_STATUS_TOPIC = '/cl/operator_status'
@@ -55,8 +56,8 @@ class SlaveStackSupervisor(Node):
     self.declare_parameter('rci_control_service', 'robot/rci_control')
     self.declare_parameter('stack_ready_service', 'robot/robot_controller_config')
     self.declare_parameter('stack_start_timeout_sec', 90.0)
-    self.declare_parameter('stack_stop_timeout_sec', 30.0)
-    self.declare_parameter('stack_stop_settle_sec', 3.0)
+    self.declare_parameter('stack_stop_timeout_sec', 45.0)
+    self.declare_parameter('stack_stop_settle_sec', 2.0)
     self.declare_parameter('publish_hz', 1.0)
     self.declare_parameter('auto_start_on_boot', False)
 
@@ -91,6 +92,14 @@ class SlaveStackSupervisor(Node):
     self._desired_stack: Optional[str] = None  # 'start' | 'stop' | None
     self._start_abort = threading.Event()
 
+    self._ready_client = None
+    if ControllerConfig is not None:
+      self._ready_client = self.create_client(
+          ControllerConfig, self._ready_service)
+    else:
+      self.get_logger().error(
+          'infra_msg ControllerConfig unavailable; stack readiness check disabled')
+
     self._pub_yj = self.create_publisher(String, self._yj_topic, 10)
     self.create_subscription(String, self._operator_topic, self._on_operator_status, 10)
 
@@ -99,7 +108,8 @@ class SlaveStackSupervisor(Node):
 
     self.get_logger().info(
         f'Slave stack supervisor ready: stack={self._stack_pkg}/{self._stack_launch} '
-        f'robot_id={self._robot_id or "(default)"} rci={self._rci_service}')
+        f'robot_id={self._robot_id or "(default)"} rci={self._rci_service} '
+        f'ready={self._ready_service}')
 
     if self._auto_start:
       self.get_logger().warn('auto_start_on_boot=true: starting slave stack immediately')
@@ -144,13 +154,13 @@ class SlaveStackSupervisor(Node):
       return
     if desired == self._desired_stack:
       return
-    # 启动失败/崩溃后 _desired_stack 仍为 'start' 且已 STOPPED：忽略调度 1Hz 重试
+    # 启动失败/崩溃后忽略调度 1Hz 重试，须 idle→teleop 边沿再试
     with self._lock:
       phase = self._phase
       task_state = self._task_state
     if (desired == 'start' and self._desired_stack == 'start'
             and phase == StackPhase.STOPPED
-            and task_state in ('start_failed', 'stack_crashed')):
+            and task_state in ('start_failed', 'stack_exited')):
       return
 
     self._desired_stack = desired
@@ -158,6 +168,7 @@ class SlaveStackSupervisor(Node):
     if desired == 'stop':
       self.get_logger().info(
           f'Scheduler release: connected={connected} mode={mode} car={car}')
+      self._release_rci()
       self._stop_stack_async()
     elif desired == 'start':
       self.get_logger().info(
@@ -250,7 +261,6 @@ class SlaveStackSupervisor(Node):
       self._phase = StackPhase.STOPPING
       self._task_state = 'stopping'
 
-    self._release_rci()
     self._terminate_stack_process()
     self._wait_until_service_gone(timeout=max(self._stop_timeout, 10.0))
     if self._stop_settle_sec > 0:
@@ -266,32 +276,34 @@ class SlaveStackSupervisor(Node):
     self.get_logger().info('Slave stack stopped — yj status=online')
 
   def _release_rci(self):
+    """RCI 释放用 ros2 CLI，避免在停栈工作线程里 spin 破坏 rclpy。"""
     if RciControl is None:
       self.get_logger().warn('infra_msg RciControl unavailable, skip RCI release')
       return
 
-    client = self.create_client(RciControl, self._rci_service)
-    if not client.wait_for_service(timeout_sec=3.0):
-      self.get_logger().warn(f'RCI service not available: {self._rci_service}')
+    cmd = [
+        'ros2', 'service', 'call', self._rci_service,
+        'infra_msg/srv/RciControl',
+        f'{{command: {RciControl.Request.CMD_RELEASE}}}',
+    ]
+    try:
+      result = subprocess.run(
+          cmd,
+          capture_output=True,
+          text=True,
+          timeout=12.0,
+          check=False,
+      )
+    except (subprocess.TimeoutExpired, OSError) as exc:
+      self.get_logger().warn(f'RCI release CLI failed: {exc}')
       return
 
-    request = RciControl.Request()
-    request.command = RciControl.Request.CMD_RELEASE
-    future = client.call_async(request)
-    rclpy.spin_until_future_complete(self, future, timeout_sec=10.0)
-    if not future.done():
-      self.get_logger().warn('RCI release call timeout')
+    if result.returncode != 0:
+      err = (result.stderr or result.stdout or '').strip()
+      self.get_logger().warn(
+          f'RCI release CLI exit {result.returncode}: {err or "no output"}')
       return
-    try:
-      response = future.result()
-    except Exception as exc:  # pragma: no cover
-      self.get_logger().warn(f'RCI release failed: {exc}')
-      return
-    if response and response.success:
-      self.get_logger().info(f'RCI released: {response.message}')
-    else:
-      msg = response.message if response else 'null response'
-      self.get_logger().warn(f'RCI release failed: {msg}')
+    self.get_logger().info('RCI released via service call')
 
   def _ensure_previous_stack_terminated(self):
     """杀栈后确保旧 launch 进程组已退出，避免重启抢资源或节点名冲突。"""
@@ -314,7 +326,8 @@ class SlaveStackSupervisor(Node):
       if proc is not None and proc.poll() is not None:
         self.get_logger().error('Slave stack process exited during startup')
         return False
-      if self._service_ready(self._ready_service):
+      if self._service_ready():
+        self.get_logger().info(f'Stack ready: {self._ready_service}')
         return True
       time.sleep(0.5)
     self.get_logger().error(
@@ -324,24 +337,17 @@ class SlaveStackSupervisor(Node):
   def _wait_until_service_gone(self, timeout: float = 10.0) -> None:
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
-      if not self._service_ready(self._ready_service):
+      if not self._service_ready():
         return
       time.sleep(0.3)
     self.get_logger().warn(
-        f'Service still listed after stop (may be stale DDS): {self._ready_service}')
+        f'Service still available after stop (may be stale DDS): {self._ready_service}')
 
-  def _service_ready(self, service_name: str) -> bool:
-    result = subprocess.run(
-        ['ros2', 'service', 'list'],
-        capture_output=True,
-        text=True,
-        timeout=5.0,
-        check=False,
-    )
-    if result.returncode != 0:
+  def _service_ready(self) -> bool:
+    """本节点 ROS2 client 检测栈就绪，避免 ros2 CLI 子进程 DDS 域不一致误判。"""
+    if self._ready_client is None:
       return False
-    needle = service_name if service_name.startswith('/') else f'/{service_name}'
-    return any(line.strip() == needle for line in result.stdout.splitlines())
+    return self._ready_client.service_is_ready()
 
   def _terminate_stack_process(self):
     with self._lock:
@@ -352,6 +358,8 @@ class SlaveStackSupervisor(Node):
       with self._lock:
         self._stack_proc = None
       return
+    self.get_logger().info(
+        f'Terminating slave stack launch (pid={proc.pid}, reason=supervisor_stop)')
     try:
       os.killpg(os.getpgid(proc.pid), signal.SIGINT)
     except ProcessLookupError:
@@ -379,27 +387,30 @@ class SlaveStackSupervisor(Node):
     with self._lock:
       self._stack_proc = None
 
-  def _check_stack_process_health(self):
-    """栈意外退出时不自动重启，等调度 idle→teleop 再试。"""
+  def _observe_stack_process_exit(self):
+    """栈自行退出时只更新状态，不主动发 SIGINT（与旧版长期待机行为一致）。"""
     with self._lock:
       proc = self._stack_proc
       phase = self._phase
     if proc is None or phase not in (StackPhase.RUNNING, StackPhase.STARTING):
       return
-    if proc.poll() is None:
+    exit_code = proc.poll()
+    if exit_code is None:
       return
     self.get_logger().error(
-        'Slave stack process exited unexpectedly (code=%s)', proc.returncode)
+        'Slave stack process exited unexpectedly (code=%s); '
+        'check logs above for Scheduler release / manual stop',
+        exit_code)
     with self._lock:
       self._phase = StackPhase.STOPPED
       self._stack_proc = None
       self._error_code = 3
-      self._task_state = 'stack_crashed'
+      self._task_state = 'stack_exited'
       if self._desired_stack != 'stop':
         self._desired_stack = 'start'
 
   def _publish_yj_status(self):
-    self._check_stack_process_health()
+    self._observe_stack_process_exit()
 
     with self._lock:
       phase = self._phase
@@ -407,7 +418,6 @@ class SlaveStackSupervisor(Node):
       error_code = self._error_code
 
     stack_running = phase in (StackPhase.RUNNING, StackPhase.STARTING)
-    # 新语义：栈停止=online（让出控制权），栈运行=offline（遥操占用）
     status = 'offline' if stack_running else 'online'
     target_car = self._target_car or self._last_car or self._robot_id
     target_ip = self._yj_target_ip or self._last_ip
@@ -432,8 +442,12 @@ class SlaveStackSupervisor(Node):
     self._pub_yj.publish(msg)
 
   def destroy_node(self):
+    self._start_abort.set()
     self._terminate_stack_process()
-    super().destroy_node()
+    try:
+      super().destroy_node()
+    except Exception:
+      pass
 
 
 def main(args=None):
@@ -444,8 +458,15 @@ def main(args=None):
   except KeyboardInterrupt:
     pass
   finally:
-    node.destroy_node()
-    rclpy.shutdown()
+    try:
+      node.destroy_node()
+    except Exception:
+      pass
+    try:
+      if rclpy.ok():
+        rclpy.shutdown()
+    except Exception:
+      pass
 
 
 if __name__ == '__main__':
