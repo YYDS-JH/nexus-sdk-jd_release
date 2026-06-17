@@ -12,7 +12,11 @@ def _exists(path: str) -> bool:
     return bool(path) and os.path.isfile(path)
 
 
-def resolve_supervisor_cmd(robot_id: str = '') -> list[str]:
+def resolve_supervisor_cmd(
+    robot_id: str = '',
+    stack_cyclonedds_uri: str = '',
+    stack_launch_file: str = 'slave_stack_only.launch.py',
+) -> list[str]:
     """Return argv prefix to start slave_stack_supervisor (before --ros-args)."""
     prefix = get_package_prefix('nexus_manage')
     share_script = os.path.join(
@@ -43,7 +47,7 @@ def resolve_supervisor_cmd(robot_id: str = '') -> list[str]:
         '--ros-args',
         '-r', '__node:=slave_stack_supervisor',
         '-p', 'stack_launch_package:=nexus_manage',
-        '-p', 'stack_launch_file:=slave_stack_only.launch.py',
+        '-p', f'stack_launch_file:={stack_launch_file}',
         '-p', 'auto_start_on_boot:=false',
     ]
     effective_robot_id = (robot_id or 'ar5').strip()
@@ -52,4 +56,6 @@ def resolve_supervisor_cmd(robot_id: str = '') -> list[str]:
             '-p', f'robot_id:={effective_robot_id}',
             '-p', f'target_car:={effective_robot_id}',
         ])
+    if stack_cyclonedds_uri:
+        ros_args.extend(['-p', f'stack_cyclonedds_uri:={stack_cyclonedds_uri}'])
     return entry + ros_args

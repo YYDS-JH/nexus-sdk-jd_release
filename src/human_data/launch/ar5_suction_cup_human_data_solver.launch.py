@@ -9,10 +9,19 @@ from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 
 
+def _resolve_node_name(robot_id: str, base_name: str) -> str:
+    if not robot_id:
+        return base_name
+    prefix = f'{robot_id}_'
+    if base_name.startswith(prefix):
+        return base_name
+    return f'{robot_id}_{base_name}'
+
+
 def launch_setup(context, *args, **kwargs):
     robot_id = LaunchConfiguration('robot_id').perform(context).strip()
     base_name = 'ar5_suction_cup_human_data_solver'
-    node_name = f'{robot_id}_{base_name}' if robot_id else base_name
+    node_name = _resolve_node_name(robot_id, base_name)
     config_path = LaunchConfiguration('ar5_config').perform(context)
 
     params = [config_path]

@@ -55,7 +55,8 @@ class SlaveStackSupervisor(Node):
     self.declare_parameter('rci_control_service', 'robot/rci_control')
     self.declare_parameter('stack_ready_service', 'robot/robot_controller_config')
     self.declare_parameter('stack_start_timeout_sec', 90.0)
-    self.declare_parameter('stack_stop_timeout_sec', 15.0)
+    self.declare_parameter('stack_stop_timeout_sec', 30.0)
+    self.declare_parameter('stack_stop_settle_sec', 3.0)
     self.declare_parameter('publish_hz', 1.0)
     self.declare_parameter('auto_start_on_boot', False)
 
@@ -73,11 +74,13 @@ class SlaveStackSupervisor(Node):
         str(self.get_parameter('stack_ready_service').value))
     self._start_timeout = float(self.get_parameter('stack_start_timeout_sec').value)
     self._stop_timeout = float(self.get_parameter('stack_stop_timeout_sec').value)
+    self._stop_settle_sec = float(self.get_parameter('stack_stop_settle_sec').value)
     self._auto_start = bool(self.get_parameter('auto_start_on_boot').value)
 
     self._phase = StackPhase.STOPPED
     self._stack_proc: Optional[subprocess.Popen] = None
     self._lock = threading.Lock()
+    self._stack_op_lock = threading.Lock()
     self._last_operator: dict = {}
     self._last_connected = False
     self._last_mode = ''
@@ -86,6 +89,7 @@ class SlaveStackSupervisor(Node):
     self._error_code = 0
     self._task_state = 'idle'
     self._desired_stack: Optional[str] = None  # 'start' | 'stop' | None
+    self._start_abort = threading.Event()
 
     self._pub_yj = self.create_publisher(String, self._yj_topic, 10)
     self.create_subscription(String, self._operator_topic, self._on_operator_status, 10)
@@ -136,8 +140,19 @@ class SlaveStackSupervisor(Node):
     else:
       desired = None
 
-    if desired is None or desired == self._desired_stack:
+    if desired is None:
       return
+    if desired == self._desired_stack:
+      return
+    # 启动失败/崩溃后 _desired_stack 仍为 'start' 且已 STOPPED：忽略调度 1Hz 重试
+    with self._lock:
+      phase = self._phase
+      task_state = self._task_state
+    if (desired == 'start' and self._desired_stack == 'start'
+            and phase == StackPhase.STOPPED
+            and task_state in ('start_failed', 'stack_crashed')):
+      return
+
     self._desired_stack = desired
 
     if desired == 'stop':
@@ -156,12 +171,23 @@ class SlaveStackSupervisor(Node):
     threading.Thread(target=self._stop_stack, daemon=True).start()
 
   def _start_stack(self):
+    with self._stack_op_lock:
+      self._start_stack_impl()
+
+  def _stop_stack(self):
+    with self._stack_op_lock:
+      self._stop_stack_impl()
+
+  def _start_stack_impl(self):
     with self._lock:
       if self._phase in (StackPhase.RUNNING, StackPhase.STARTING):
         self.get_logger().info('Slave stack already running or starting')
         return
       self._phase = StackPhase.STARTING
       self._task_state = 'starting'
+    self._start_abort.clear()
+
+    self._ensure_previous_stack_terminated()
 
     cmd = ['ros2', 'launch', self._stack_pkg, self._stack_launch]
     if self._robot_id:
@@ -182,40 +208,53 @@ class SlaveStackSupervisor(Node):
         self._phase = StackPhase.STOPPED
         self._error_code = 1
         self._task_state = 'start_failed'
+        self._desired_stack = 'start'
       return
 
     with self._lock:
       self._stack_proc = proc
 
     if not self._wait_stack_ready():
+      if self._start_abort.is_set():
+        self.get_logger().info('Slave stack start cancelled (stop requested)')
+        return
       self.get_logger().error('Slave stack failed readiness check, stopping')
       self._terminate_stack_process()
+      self._wait_until_service_gone(timeout=10.0)
       with self._lock:
         self._phase = StackPhase.STOPPED
         self._stack_proc = None
         self._error_code = 2
         self._task_state = 'start_failed'
+        self._desired_stack = 'start'
       return
 
     with self._lock:
+      if self._start_abort.is_set():
+        return
       self._phase = StackPhase.RUNNING
       self._error_code = 0
       self._task_state = 'teleop_stack_running'
       self._desired_stack = 'start'
     self.get_logger().info('Slave stack running — yj status=offline')
 
-  def _stop_stack(self):
+  def _stop_stack_impl(self):
+    self._start_abort.set()
     with self._lock:
       if self._phase == StackPhase.STOPPED and self._stack_proc is None:
         self.get_logger().info('Slave stack already stopped')
         self._task_state = 'released'
         self._desired_stack = 'stop'
+        self._start_abort.clear()
         return
       self._phase = StackPhase.STOPPING
       self._task_state = 'stopping'
 
     self._release_rci()
     self._terminate_stack_process()
+    self._wait_until_service_gone(timeout=max(self._stop_timeout, 10.0))
+    if self._stop_settle_sec > 0:
+      time.sleep(self._stop_settle_sec)
 
     with self._lock:
       self._phase = StackPhase.STOPPED
@@ -223,6 +262,7 @@ class SlaveStackSupervisor(Node):
       self._error_code = 0
       self._task_state = 'released'
       self._desired_stack = 'stop'
+    self._start_abort.clear()
     self.get_logger().info('Slave stack stopped — yj status=online')
 
   def _release_rci(self):
@@ -253,9 +293,22 @@ class SlaveStackSupervisor(Node):
       msg = response.message if response else 'null response'
       self.get_logger().warn(f'RCI release failed: {msg}')
 
+  def _ensure_previous_stack_terminated(self):
+    """杀栈后确保旧 launch 进程组已退出，避免重启抢资源或节点名冲突。"""
+    with self._lock:
+      proc = self._stack_proc
+    if proc is not None and proc.poll() is None:
+      self.get_logger().warn('Previous stack process still alive, terminating before restart')
+      self._terminate_stack_process()
+    with self._lock:
+      self._stack_proc = None
+    self._wait_until_service_gone(timeout=10.0)
+
   def _wait_stack_ready(self) -> bool:
     deadline = time.monotonic() + self._start_timeout
     while time.monotonic() < deadline:
+      if self._start_abort.is_set():
+        return False
       with self._lock:
         proc = self._stack_proc
       if proc is not None and proc.poll() is not None:
@@ -267,6 +320,15 @@ class SlaveStackSupervisor(Node):
     self.get_logger().error(
         f'Timeout waiting for {self._ready_service} ({self._start_timeout}s)')
     return False
+
+  def _wait_until_service_gone(self, timeout: float = 10.0) -> None:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+      if not self._service_ready(self._ready_service):
+        return
+      time.sleep(0.3)
+    self.get_logger().warn(
+        f'Service still listed after stop (may be stale DDS): {self._ready_service}')
 
   def _service_ready(self, service_name: str) -> bool:
     result = subprocess.run(
@@ -287,29 +349,66 @@ class SlaveStackSupervisor(Node):
     if proc is None:
       return
     if proc.poll() is not None:
+      with self._lock:
+        self._stack_proc = None
       return
     try:
       os.killpg(os.getpgid(proc.pid), signal.SIGINT)
     except ProcessLookupError:
+      with self._lock:
+        self._stack_proc = None
       return
     try:
-      proc.wait(timeout=self._stop_timeout)
+      half = max(self._stop_timeout / 2.0, 5.0)
+      proc.wait(timeout=half)
     except subprocess.TimeoutExpired:
-      self.get_logger().warn('Slave stack SIGINT timeout, sending SIGKILL')
+      self.get_logger().warn('Slave stack SIGINT timeout, sending SIGTERM')
       try:
-        os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+        os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
       except ProcessLookupError:
         pass
-      proc.wait(timeout=5.0)
+      try:
+        proc.wait(timeout=half)
+      except subprocess.TimeoutExpired:
+        self.get_logger().warn('Slave stack SIGTERM timeout, sending SIGKILL')
+        try:
+          os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+        except ProcessLookupError:
+          pass
+        proc.wait(timeout=5.0)
+    with self._lock:
+      self._stack_proc = None
+
+  def _check_stack_process_health(self):
+    """栈意外退出时不自动重启，等调度 idle→teleop 再试。"""
+    with self._lock:
+      proc = self._stack_proc
+      phase = self._phase
+    if proc is None or phase not in (StackPhase.RUNNING, StackPhase.STARTING):
+      return
+    if proc.poll() is None:
+      return
+    self.get_logger().error(
+        'Slave stack process exited unexpectedly (code=%s)', proc.returncode)
+    with self._lock:
+      self._phase = StackPhase.STOPPED
+      self._stack_proc = None
+      self._error_code = 3
+      self._task_state = 'stack_crashed'
+      if self._desired_stack != 'stop':
+        self._desired_stack = 'start'
 
   def _publish_yj_status(self):
+    self._check_stack_process_health()
+
     with self._lock:
       phase = self._phase
+      task_state = self._task_state
       error_code = self._error_code
 
-    # 栈已停止 / 让出控制权 → online；遥操栈运行中 → offline
-    stack_active = phase == StackPhase.RUNNING
-    status = 'offline' if stack_active else 'online'
+    stack_running = phase in (StackPhase.RUNNING, StackPhase.STARTING)
+    # 新语义：栈停止=online（让出控制权），栈运行=offline（遥操占用）
+    status = 'offline' if stack_running else 'online'
     target_car = self._target_car or self._last_car or self._robot_id
     target_ip = self._yj_target_ip or self._last_ip
 
@@ -317,8 +416,12 @@ class SlaveStackSupervisor(Node):
         'device_id': self._yj_device_id,
         'target_car': target_car,
         'target_ip': target_ip,
-        'connected': bool(stack_active and self._last_connected),
+        'connected': self._last_connected and stack_running,
         'status': status,
+        'task_state': task_state,
+        'scheduler_mode': self._last_mode,
+        'stack_phase': phase.value,
+        'battery_pct': 100,
         'signal_dbm': -50,
         'e_stop_pressed': False,
         'control_latency_ms': 0,
