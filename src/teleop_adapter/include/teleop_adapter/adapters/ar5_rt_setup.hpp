@@ -25,6 +25,13 @@ struct Config {
     bool prefer_robot_toolset{true};
     /** If true, MoveJ to init_joint_positions during deviceHandshake (debug). */
     bool startup_move_to_init{false};
+    /**
+     * RT 控制模式：true=关节位置(jointPosition)，false=力矩(torque/MIT)。
+     * 由 YAML right_arm_use_position_control 配置，无需重新编译。
+     */
+    bool use_position_control{true};
+    /** 位置模式 setFilterLimit 截止频率 (Hz)，建议 10~100。 */
+    double position_filter_cutoff_hz{10.0};
 
     Config() {
         fc_friction.fill(0.1);
@@ -58,6 +65,40 @@ inline void readToolsetLoad(rokae::ArRobot& robot,
     } else if (toolset.load.mass > 0.0) {
         load = toolset.load;
         has_load = true;
+    }
+}
+
+inline void applyRtPositionControlSetup(rokae::RtMotionControlCobot<7>& rt_controller,
+                                      const Config& cfg,
+                                      const rokae::Load& load,
+                                      bool has_load,
+                                      const std::string& tag) {
+    error_code ec;
+
+    if (has_load) {
+        rt_controller.setLoad(load, ec);
+        if (ec) {
+            NEXUS_CERR << "[" << tag << "] setLoad failed: " << ec.message() << std::endl;
+        } else {
+            NEXUS_COUT << "[" << tag << "] RT load set: mass=" << load.mass
+                       << "kg, cog=[" << load.cog[0] << "," << load.cog[1] << ","
+                       << load.cog[2] << "], inertia=[" << load.inertia[0] << ","
+                       << load.inertia[1] << "," << load.inertia[2] << "]" << std::endl;
+        }
+    }
+
+    rt_controller.setFilterFrequency(
+        cfg.filter_joint_hz, cfg.filter_cartesian_hz, cfg.filter_torque_hz, ec);
+    if (ec) {
+        NEXUS_CERR << "[" << tag << "] setFilterFrequency failed: " << ec.message() << std::endl;
+    }
+
+    if (!rt_controller.setFilterLimit(true, cfg.position_filter_cutoff_hz)) {
+        NEXUS_CERR << "[" << tag << "] setFilterLimit failed (cutoff="
+                   << cfg.position_filter_cutoff_hz << " Hz)" << std::endl;
+    } else {
+        NEXUS_COUT << "[" << tag << "] Position filter limit enabled: "
+                   << cfg.position_filter_cutoff_hz << " Hz" << std::endl;
     }
 }
 

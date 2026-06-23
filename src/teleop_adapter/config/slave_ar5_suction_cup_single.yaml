@@ -35,6 +35,9 @@
     right_arm_fc_friction: [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3]
     right_arm_fc_gain: [30.0, 30.0, 30.0, 30.0, 30.0, 30.0, 30.0]
 
+    right_arm_use_position_control: true
+    right_arm_position_filter_cutoff_hz: 10.0
+
     # whether to enable robotic arm
     auto_enable: true
 
