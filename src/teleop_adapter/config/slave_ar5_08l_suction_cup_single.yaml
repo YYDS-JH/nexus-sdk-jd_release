@@ -3,7 +3,7 @@
     # robot name，用来作为 topic 前缀，比如 /ar5/robot/joint_cmd
     robot_name: "ar5_08l"
 
-    adapter_type: "ar5_suction_cup"   # "teleop" | "y1" | "ar5" | "ar5_suction_cup"
+    adapter_type: "ar5_suction_cup"   # "teleop" | "ar5" | "ar5_suction_cup"
 
     # ==================== AR5 机械臂参数 ====================
     # right_arm_port 复用为 robot_ip（AR5控制器IP地址）
@@ -33,9 +33,6 @@
     right_arm_filter_torque_hz: 10.0
     right_arm_fc_friction: [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3]
     right_arm_fc_gain: [30.0, 30.0, 30.0, 30.0, 30.0, 30.0, 30.0]
-
-    right_arm_use_position_control: true
-    right_arm_position_filter_cutoff_hz: 10.0
 
     # whether to enable robotic arm
     auto_enable: true

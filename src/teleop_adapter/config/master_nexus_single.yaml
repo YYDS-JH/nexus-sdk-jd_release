@@ -3,7 +3,7 @@
     # robot name，用来作为 topic 前缀，比如 /my_robot/rt/teleop/...
     robot_name: "nexus_arm_master"
 
-    adapter_type: "teleop"   # "teleop" 或 "y1"
+    adapter_type: "teleop"   # "teleop"
     # right_arm parameters: configuration for the right robotic arm
 
     right_arm_port: '/dev/nexus_arm'

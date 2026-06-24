@@ -4,7 +4,7 @@
  * @LastEditors: JiangHu JiangHu@pegasus-ai.cn
  * @LastEditTime: 2025-01-07 10:00:00
  * @FilePath: teleop_adapter/include/teleop_adapter/communication/dummy_communication_interface.hpp
- * @Description: 虚拟通信接口（用于不需要串口通信的适配器，如Y1Adapter）
+ * @Description: 虚拟通信接口（用于不需要串口通信的适配器）
  * 
  * Copyright (c) 2024 by Infra Embedded, All Rights Reserved. 
  */
@@ -30,7 +30,7 @@ namespace teleop_adapter {
   * @brief  虚拟通信接口类
   * @param  null
   * @retval null
-  * @note   用于不需要串口通信的适配器，如Y1Adapter
+  * @note   用于不需要串口通信的适配器
   */
 class DummyCommunicationInterface : public CommunicationInterface {
 public:

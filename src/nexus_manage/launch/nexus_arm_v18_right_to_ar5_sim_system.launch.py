@@ -56,17 +56,17 @@ def generate_launch_description():
         launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
         )
     
-    # JD 分支不带吸盘，暂不需要 gripper_keyboard
-    # gripper_launch = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource([
-    #         PathJoinSubstitution([
-    #             FindPackageShare('gripper_keyboard'),
-    #             'launch',
-    #             'nexus-arm_left_gripper.launch.py'
-    #         ])
-    #     ]),
-    #     launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
-    #     )
+    # Q/R 等踏板键（遥操进入需 Q 长按 3s + R 按住）
+    gripper_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([
+            PathJoinSubstitution([
+                FindPackageShare('gripper_keyboard'),
+                'launch',
+                'nexus-arm_left_gripper.launch.py'
+            ])
+        ]),
+        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
+        )
 
     master_controller_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
@@ -98,7 +98,15 @@ def generate_launch_description():
                 'nexus_nexus-arm_v18_to_ar5_manage.launch.py'
             ])
         ]),
-        launch_arguments={"robot_id": LaunchConfiguration("robot_id")}.items(),
+        launch_arguments={
+            'robot_id': LaunchConfiguration('robot_id'),
+            'boot_selfcheck_await_scheduler': 'false',
+            'nexus_manage_config_file': PathJoinSubstitution([
+                FindPackageShare('nexus_manage'),
+                'config',
+                'nexus-arm_v18_to_ar5_sim_manage.yaml',
+            ]),
+        }.items(),
         )
     
     return LaunchDescription([
@@ -112,7 +120,7 @@ def generate_launch_description():
         nexus_arm_sim_launch,
         ar5_human_data_solver_launch,
         nexus_arm_human_data_solver_launch,
-        # gripper_launch,
+        gripper_launch,
         master_controller_launch,
         slave_controller_launch,
         manager_launch,

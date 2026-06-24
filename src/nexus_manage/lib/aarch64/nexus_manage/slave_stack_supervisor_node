@@ -13,8 +13,10 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import signal
 import subprocess
+import tempfile
 import threading
 import time
 from enum import Enum
@@ -32,6 +34,8 @@ except ImportError:  # pragma: no cover
 
 OPERATOR_STATUS_TOPIC = '/cl/operator_status'
 YJ_OPERATOR_TOPIC = '/cl/yj/operator'
+# supervisor 固定 ParticipantIndex=3 → 7003；RCI CLI 子进程须用其它 index
+_RCI_CLI_PARTICIPANT_INDEX = 4
 
 
 class StackPhase(str, Enum):
@@ -60,6 +64,7 @@ class SlaveStackSupervisor(Node):
     self.declare_parameter('stack_stop_settle_sec', 2.0)
     self.declare_parameter('publish_hz', 1.0)
     self.declare_parameter('auto_start_on_boot', False)
+    self.declare_parameter('stack_cyclonedds_uri', '')
 
     self._operator_topic = self.get_parameter('operator_status_topic').value
     self._yj_topic = self.get_parameter('yj_operator_topic').value
@@ -77,6 +82,9 @@ class SlaveStackSupervisor(Node):
     self._stop_timeout = float(self.get_parameter('stack_stop_timeout_sec').value)
     self._stop_settle_sec = float(self.get_parameter('stack_stop_settle_sec').value)
     self._auto_start = bool(self.get_parameter('auto_start_on_boot').value)
+    self._stack_cyclonedds_uri = str(
+        self.get_parameter('stack_cyclonedds_uri').value).strip()
+    self._rci_cli_dds_path: Optional[str] = None
 
     self._phase = StackPhase.STOPPED
     self._stack_proc: Optional[subprocess.Popen] = None
@@ -121,6 +129,65 @@ class SlaveStackSupervisor(Node):
       return f'/{self._robot_id}/{suffix}'
     return f'/{suffix}'
 
+  def _normalize_cyclonedds_path(self, uri: str) -> str:
+    path = uri.strip()
+    if path.startswith('file://'):
+      path = path[7:]
+    return path
+
+  def _stack_launch_env(self) -> dict:
+    """子进程启动从臂栈时使用 stack DDS（7000-7002），勿继承 supervisor 7003。"""
+    env = os.environ.copy()
+    if self._stack_cyclonedds_uri:
+      path = self._normalize_cyclonedds_path(self._stack_cyclonedds_uri)
+      env['CYCLONEDDS_URI'] = f'file://{path}'
+    return env
+
+  def _rci_cli_env(self) -> Optional[dict]:
+    """RCI ros2 CLI 使用 stack peer 列表 + 独立 participant（默认 7004）。"""
+    if not self._stack_cyclonedds_uri:
+      return None
+    stack_path = self._normalize_cyclonedds_path(self._stack_cyclonedds_uri)
+    if not os.path.isfile(stack_path):
+      return None
+
+    if self._rci_cli_dds_path is None:
+      with open(stack_path, encoding='utf-8') as handle:
+        xml = handle.read()
+      fixed_index = (
+          f'<ParticipantIndex>{_RCI_CLI_PARTICIPANT_INDEX}</ParticipantIndex>')
+      xml = re.sub(
+          r'<ParticipantIndex>auto</ParticipantIndex>\s*'
+          r'<MaxAutoParticipantIndex>\d+</MaxAutoParticipantIndex>',
+          fixed_index,
+          xml,
+          count=1,
+      )
+      xml = xml.replace(
+          '<ParticipantIndex>auto</ParticipantIndex>', fixed_index)
+      tmp = tempfile.NamedTemporaryFile(
+          mode='w',
+          prefix='cyclonedds_supervisor_rci_cli_',
+          suffix='.xml',
+          delete=False,
+      )
+      tmp.write(xml)
+      tmp.flush()
+      tmp.close()
+      self._rci_cli_dds_path = tmp.name
+
+    env = os.environ.copy()
+    env['CYCLONEDDS_URI'] = f'file://{self._rci_cli_dds_path}'
+    return env
+
+  def _stack_is_running(self) -> bool:
+    with self._lock:
+      proc = self._stack_proc
+      phase = self._phase
+    if proc is not None and proc.poll() is None:
+      return True
+    return phase in (StackPhase.RUNNING, StackPhase.STARTING, StackPhase.STOPPING)
+
   def _on_operator_status(self, msg: String):
     try:
       data = json.loads(msg.data)
@@ -134,6 +201,8 @@ class SlaveStackSupervisor(Node):
     ip = str(data.get('ip', ''))
 
     if self._target_car and car and car != self._target_car:
+      self.get_logger().info(
+          f'operator_status ignored: car={car!r} != target_car={self._target_car!r}')
       return
 
     self._last_operator = data
@@ -148,9 +217,9 @@ class SlaveStackSupervisor(Node):
     elif connected and mode == 'teleop':
       desired = 'start'
     else:
-      desired = None
-
-    if desired is None:
+      self.get_logger().info(
+          f'operator_status no action: connected={connected} mode={mode!r} car={car!r} '
+          f'(need connected=true+mode=teleop to start, or connected=false+mode=idle to stop)')
       return
     if desired == self._desired_stack:
       return
@@ -161,6 +230,9 @@ class SlaveStackSupervisor(Node):
     if (desired == 'start' and self._desired_stack == 'start'
             and phase == StackPhase.STOPPED
             and task_state in ('start_failed', 'stack_exited')):
+      self.get_logger().warn(
+          f'operator_status start ignored: previous {task_state}, '
+          f'send idle then teleop again to retry')
       return
 
     self._desired_stack = desired
@@ -212,6 +284,7 @@ class SlaveStackSupervisor(Node):
           stderr=None,
           preexec_fn=os.setsid,
           text=True,
+          env=self._stack_launch_env(),
       )
     except OSError as exc:
       self.get_logger().error(f'Failed to start slave stack: {exc}')
@@ -230,6 +303,7 @@ class SlaveStackSupervisor(Node):
         self.get_logger().info('Slave stack start cancelled (stop requested)')
         return
       self.get_logger().error('Slave stack failed readiness check, stopping')
+      self._release_rci()
       self._terminate_stack_process()
       self._wait_until_service_gone(timeout=10.0)
       with self._lock:
@@ -276,9 +350,19 @@ class SlaveStackSupervisor(Node):
     self.get_logger().info('Slave stack stopped — yj status=online')
 
   def _release_rci(self):
-    """RCI 释放用 ros2 CLI，避免在停栈工作线程里 spin 破坏 rclpy。"""
+    """RCI 释放用 ros2 CLI（stack DDS + 独立 participant），避免占用 supervisor 7003。"""
     if RciControl is None:
       self.get_logger().warn('infra_msg RciControl unavailable, skip RCI release')
+      return
+
+    if not self._stack_is_running():
+      self.get_logger().info('Skip RCI release: slave stack not running')
+      return
+
+    cli_env = self._rci_cli_env()
+    if cli_env is None:
+      self.get_logger().warn(
+          'stack_cyclonedds_uri missing/invalid; skip RCI release CLI')
       return
 
     cmd = [
@@ -293,6 +377,7 @@ class SlaveStackSupervisor(Node):
           text=True,
           timeout=12.0,
           check=False,
+          env=cli_env,
       )
     except (subprocess.TimeoutExpired, OSError) as exc:
       self.get_logger().warn(f'RCI release CLI failed: {exc}')
@@ -347,7 +432,10 @@ class SlaveStackSupervisor(Node):
     """本节点 ROS2 client 检测栈就绪，避免 ros2 CLI 子进程 DDS 域不一致误判。"""
     if self._ready_client is None:
       return False
-    return self._ready_client.service_is_ready()
+    if self._ready_client.service_is_ready():
+      return True
+    # 短阻塞等待 graph 更新（MultiThreadedExecutor 下工作线程可安全调用）
+    return self._ready_client.wait_for_service(timeout_sec=0.5)
 
   def _terminate_stack_process(self):
     with self._lock:
@@ -451,10 +539,14 @@ class SlaveStackSupervisor(Node):
 
 
 def main(args=None):
+  from rclpy.executors import MultiThreadedExecutor
+
   rclpy.init(args=args)
   node = SlaveStackSupervisor()
+  executor = MultiThreadedExecutor()
+  executor.add_node(node)
   try:
-    rclpy.spin(node)
+    executor.spin()
   except KeyboardInterrupt:
     pass
   finally:

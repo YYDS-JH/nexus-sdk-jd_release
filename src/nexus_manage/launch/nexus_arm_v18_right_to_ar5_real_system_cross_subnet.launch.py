@@ -26,6 +26,10 @@
   # === 单机测试模式 ===
   ros2 launch nexus_manage nexus_arm_v18_right_to_ar5_real_system_cross_subnet.launch.py
 
+  # === 第三方 Ubuntu 监控 ros2 topic / node list ===
+  # 默认把监控机 Peer 写入 CycloneDDS；关闭请传 dds_extra_peers:=''
+  ros2 launch nexus_manage nexus_arm_v18_right_to_ar5_real_system_cross_subnet.launch.py role:=master
+
 端口规则 (ParticipantIndex=auto, DomainGain=0):
   Participant port = _PORT_BASE + ParticipantIndex
   每个节点自动分配一个独立端口。
@@ -63,6 +67,9 @@ _MASTER_EXTERNAL_IP = "10.18.20.25"
 _SLAVE_NETWORK_INTERFACE = "mgbe1"
 _SLAVE_EXTERNAL_IP = "10.18.21.24"
 
+# 第三方 Ubuntu 监控端 CycloneDDS Peer（ParticipantIndex=4 → 7004）；留空关闭
+_DDS_EXTRA_PEERS = '10.18.20.42:7004'
+
 # DDS 端口基数（主从共用）
 _PORT_BASE = 7000
 
@@ -96,13 +103,31 @@ _SLAVE_NODES = [
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def _make_peers_xml(local_count: int, remote_count: int, peer_ip: str,
-                    local_ip: str = '127.0.0.1') -> str:
+                    local_ip: str = '127.0.0.1',
+                    extra_peers: str = '') -> str:
     """生成 Peers 段：本机用 local_ip，远端用 peer_ip。"""
     lines = []
     for i in range(local_count):
         lines.append(f'        <Peer Address="{local_ip}:{_PORT_BASE + i}"/>')
     for i in range(remote_count):
         lines.append(f'        <Peer Address="{peer_ip}:{_PORT_BASE + i}"/>')
+    return _append_extra_peers('\n'.join(lines), extra_peers)
+
+
+def _append_extra_peers(peers_xml: str, extra_peers: str) -> str:
+    """追加第三方监控/调试机 Peer，格式：ip:port 或 ip（默认 7004）。"""
+    if not extra_peers or not extra_peers.strip():
+        return peers_xml
+    lines = [peers_xml] if peers_xml else []
+    for item in extra_peers.replace(';', ',').split(','):
+        item = item.strip()
+        if not item:
+            continue
+        if ':' in item:
+            addr = item
+        else:
+            addr = f'{item}:{_PORT_BASE + 4}'
+        lines.append(f'        <Peer Address="{addr}"/>')
     return '\n'.join(lines)
 
 
@@ -313,12 +338,14 @@ def _resolve_stack_launch_actions(role, args_by_pkg, supervisor_mode, stack_only
 
 def _build_legacy_dds_configs(role, supervisor_mode, stack_only,
                                 network_interface, external_ip, peer_ip,
-                                local_nodes, remote_nodes):
+                                local_nodes, remote_nodes,
+                                extra_peers=''):
     """生成 stack(7000-7002 auto) 与 supervisor(7003 固定) 两份配置。"""
     local_count, remote_count = _legacy_peer_counts(
         role, local_nodes, remote_nodes)
     peers_xml = _make_peers_xml(
-        local_count, remote_count, peer_ip, local_ip='127.0.0.1')
+        local_count, remote_count, peer_ip, local_ip='127.0.0.1',
+        extra_peers=extra_peers)
 
     stack_xml = _make_cyclonedds_xml(
         network_interface, external_ip, peers_xml, participant_index='auto')
@@ -348,6 +375,9 @@ def _build_legacy_dds_configs(role, supervisor_mode, stack_only,
             f'(stack ports {_PORT_BASE}-{_PORT_BASE + local_count - 1})'
         )
 
+    if extra_peers:
+        print(f'[cross_subnet] extra DDS peers: {extra_peers}')
+
     return stack_path, supervisor_path
 
 
@@ -357,6 +387,7 @@ def launch_setup(context, *args, **kwargs):
     startup_move_to_init = LaunchConfiguration('startup_move_to_init').perform(context).strip()
     supervisor_mode = LaunchConfiguration('supervisor_mode').perform(context).strip().lower()
     stack_only = LaunchConfiguration('stack_only').perform(context).strip().lower()
+    dds_extra_peers = LaunchConfiguration('dds_extra_peers').perform(context).strip()
 
     registry_path = _resolve_registry_path(context)
     slaves = load_registry(registry_path)
@@ -370,6 +401,11 @@ def launch_setup(context, *args, **kwargs):
 
     stack_dds_path = _find_existing_stack_cyclonedds_xml()
     supervisor_dds_path = _find_existing_supervisor_cyclonedds_xml() if use_supervisor else None
+
+    # 配置了 extra peers 时必须重新生成 XML，避免复用旧 Peer 列表
+    if dds_extra_peers:
+        stack_dds_path = None
+        supervisor_dds_path = None
 
     if stack_dds_path:
         print(f'[cross_subnet] 复用 stack DDS 配置: {stack_dds_path}')
@@ -399,6 +435,7 @@ def launch_setup(context, *args, **kwargs):
                     port_base=_PORT_BASE,
                     local_ip='127.0.0.1',
                 )
+                peers_xml = _append_extra_peers(peers_xml, dds_extra_peers)
                 stack_xml = _make_cyclonedds_xml(
                     network_interface, external_ip, peers_xml)
                 stack_dds_path = _write_cyclonedds_config(
@@ -414,7 +451,7 @@ def launch_setup(context, *args, **kwargs):
                 external_ip = matched['ip']
                 peers_xml = _make_peers_xml(
                     len(_SLAVE_NODES), len(_MASTER_NODES), _MASTER_EXTERNAL_IP,
-                    local_ip='127.0.0.1')
+                    local_ip='127.0.0.1', extra_peers=dds_extra_peers)
                 stack_xml = _make_cyclonedds_xml(
                     network_interface, external_ip, peers_xml)
                 stack_dds_path = _write_cyclonedds_config(
@@ -451,12 +488,13 @@ def launch_setup(context, *args, **kwargs):
             stack_dds_path, supervisor_dds_path = _build_legacy_dds_configs(
                 role, supervisor_mode, stack_only,
                 network_interface, external_ip, peer_ip,
-                local_nodes, remote_nodes)
+                local_nodes, remote_nodes,
+                extra_peers=dds_extra_peers)
 
     elif use_supervisor and not supervisor_dds_path:
         peers_xml = _make_peers_xml(
             len(_SLAVE_NODES), len(_MASTER_NODES), _MASTER_EXTERNAL_IP,
-            local_ip='127.0.0.1')
+            local_ip='127.0.0.1', extra_peers=dds_extra_peers)
         supervisor_xml = _make_cyclonedds_xml(
             _SLAVE_NETWORK_INTERFACE, _SLAVE_EXTERNAL_IP, peers_xml,
             participant_index=_SUPERVISOR_PARTICIPANT_INDEX)
@@ -526,6 +564,15 @@ def generate_launch_description():
             'stack_only',
             default_value='false',
             description='Internal: launch slave stack without supervisor (supervisor subprocess).',
+        ),
+        DeclareLaunchArgument(
+            'dds_extra_peers',
+            default_value=_DDS_EXTRA_PEERS,
+            description=(
+                'Extra CycloneDDS Peer(s) for third-party monitor PCs, '
+                'comma-separated ip:port (port defaults to 7004). '
+                'Set to empty string to disable.'
+            ),
         ),
         OpaqueFunction(function=launch_setup),
     ])

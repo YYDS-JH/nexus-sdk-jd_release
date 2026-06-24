@@ -29,7 +29,7 @@ struct Config {
      * RT 控制模式：true=关节位置(jointPosition)，false=力矩(torque/MIT)。
      * 由 YAML right_arm_use_position_control 配置，无需重新编译。
      */
-    bool use_position_control{true};
+    bool use_position_control{false};
     /** 位置模式 setFilterLimit 截止频率 (Hz)，建议 10~100。 */
     double position_filter_cutoff_hz{10.0};
 
