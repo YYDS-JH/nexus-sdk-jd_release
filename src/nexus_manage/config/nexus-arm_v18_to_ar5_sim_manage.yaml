@@ -26,8 +26,14 @@
     # 单机仿真：跳过 Phase 1 等 scheduler，直接进 Phase 2
     boot_selfcheck_await_scheduler: false
 
-    # ==================== 落格/调度（仿真关闭）====================
-    placement_enabled: false
+    # ==================== 落格（仿真开启；调度/supervisor 仍关闭）====================
+    placement_enabled: true
+    placement_move_timeout_sec: 30.0
+    placement_release_hold_sec: 0.5
+    placement_position_tolerance: 0.10
+    placement_long_press_sec: 3.0
+    placement_auto_move_on_start: true
+    placement_confirm_return_to_idle: true
     placement_scheduler_handoff: false
     slave_stack_supervisor_handoff: false
     boot_selfcheck_phase2_timeout_sec: 10.0
@@ -38,6 +44,7 @@
         type: "ee"
         teleop_pos_values: [0.0, -0.65, 0.47, 0.49, -0.17, 0.18]
         robot_pos_values: [-1.57, 0.1, 0.0, 1.47, 0.0, 0.0, 0.0]
+        placement_robot_pos_values: [0.010158, -0.073356, 0.033318, 1.570796, 0.013614, 0.959931, -0.057596]
       right_end_effector:
         type: "gripper"
         teleop_pos_values: [0.0]

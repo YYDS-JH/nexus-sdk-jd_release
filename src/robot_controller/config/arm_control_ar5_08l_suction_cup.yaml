@@ -325,7 +325,19 @@
         velocity_new_weight: 0.02
 
       mit_cmd_velocity_zero: true   # true: cmd.velocity 置零；false: 使用 CBF 输出速度
-      motion_planning_type: 2       # 0=线性插值  1=S 曲线  2=五次多项式
+      motion_planning_type: 2                # 普通复位：2=五次多项式
+      placement_motion_planning_type: 3        # 落格：3=多 waypoint 五次多项式（use_motion_planning_waypoints 时切换）
+      # 落格：velocity_scale 控制过点连贯性；段时长/peak_factor 控制整体快慢
+      multi_waypoint_velocity_scale: 0.5
+      multi_waypoint_min_segment_time: 1.2
+      multi_waypoint_max_segment_time: 4.0
+      multi_waypoint_peak_velocity_factor_end: 2.0
+      multi_waypoint_peak_velocity_factor_mid: 2.4
+      # 落格途径点（仅落格时启用，普通复位不走途径点）。每个 waypoint 长度须等于硬件 DOF（AR5 为 7）。
+      # 抓取起点(deg): [-77, 28, 0.45, 60, -0.84, 21, 25] → 落格目标见 nexus_manage placement_robot_pos_values
+      placement_motion_planning_waypoint_count: 2
+      placement_motion_planning_waypoint_0: [-0.802279, 0.263873, 0.01804, 1.256637, -0.003351, 0.603884, 0.238761]   # ~40% start→target
+      placement_motion_planning_waypoint_1: [-0.328358, 0.067156, 0.026952, 1.439897, 0.006545, 0.811578, 0.065886]   # ~75% start→target
 
       # ══════════════════════════════════════════════════════════════════════
       #  8. 控制增益

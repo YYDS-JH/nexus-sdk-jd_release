@@ -50,7 +50,7 @@ _STACK_LAUNCH_FILE = 'slave_stack_suction_cup_only.launch.py'
 # 部署配置（部署前修改此处）
 # ═══════════════════════════════════════════════════════════════════════════════
 
-_DOMAIN_ID = '18'
+_DOMAIN_ID = '32'
 
 _MASTER_NETWORK_INTERFACE = "wlo1"
 _MASTER_EXTERNAL_IP = "192.168.9.6"

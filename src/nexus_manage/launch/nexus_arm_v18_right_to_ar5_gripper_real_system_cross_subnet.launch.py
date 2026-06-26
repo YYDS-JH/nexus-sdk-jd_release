@@ -27,7 +27,7 @@ from launch_ros.substitutions import FindPackageShare
 # 部署配置（部署前修改此处）
 # ═══════════════════════════════════════════════════════════════════════════════
 
-_DOMAIN_ID = '18'
+_DOMAIN_ID = '32'
 
 # Master 侧（外网，Nexus-Arm 端）
 _MASTER_NETWORK_INTERFACE = "wlo1"

@@ -40,7 +40,7 @@ from slave_registry import find_slave_by_ip, generate_peers_xml, load_registry
 # 部署配置（部署前修改此处）
 # ═══════════════════════════════════════════════════════════════════════════════
 
-_DOMAIN_ID = '18'
+_DOMAIN_ID = '32'
 
 # Master 侧（外网，Nexus-Arm 端）
 _MASTER_NETWORK_INTERFACE = "enp0s31f6"

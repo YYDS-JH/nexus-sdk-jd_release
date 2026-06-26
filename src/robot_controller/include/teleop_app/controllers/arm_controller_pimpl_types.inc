@@ -14,6 +14,7 @@
 #include "teleop_app/controllers/force_est/ar5_dynamics_force_estimator.hpp"
 #include "teleop_app/controllers/data_types.hpp"
 #include "teleop_app/controllers/gripper_controller.hpp"
+#include "teleop_app/controllers/multi_waypoint_polynomial_profile.hpp"
 #include "teleop_app/controllers/pid_controller.hpp"
 #include "teleop_app/controllers/polynomial_profile.hpp"
 #include "teleop_app/controllers/post_cbf_joint_reference_filter.hpp"
@@ -55,9 +56,12 @@ struct ArmController::Impl {
     std::vector<double> planning_start_positions_;
     std::vector<double> last_s_curve_target_;
     std::vector<double> last_polynomial_target_;
+    std::vector<double> last_multi_waypoint_target_;
+    std::vector<std::vector<double>> last_multi_waypoint_path_;
 
     std::unique_ptr<SCurveProfile> s_curve_profile_{nullptr};
     std::unique_ptr<PolynomialProfile> polynomial_profile_{nullptr};
+    std::unique_ptr<MultiWaypointPolynomialProfile> multi_waypoint_profile_{nullptr};
 
     bool enable_cbf_{false};
     OSCBF::OSCBFController::Config cbf_config_;

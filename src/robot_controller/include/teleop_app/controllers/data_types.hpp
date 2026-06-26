@@ -226,7 +226,8 @@ struct MotorParams {
 enum class MotionPlanningType {
     INTERPOLATE = 0,  // 线性插值规划
     SCURVE = 1,       // S曲线规划
-    POLYNOMIAL = 2    // 多项式插值规划（五次多项式）
+    POLYNOMIAL = 2,   // 多项式插值规划（五次多项式）
+    MULTI_WAYPOINT_POLYNOMIAL = 3  // 多 waypoint 五次多项式（中间点不停顿）
 };
 
 /**
@@ -683,7 +684,13 @@ struct ControllerParams {
     double ctrl_dt;                     // 控制周期时间步长，根据 control_publish_rate 计算
     
     // 运动规划类型
-    MotionPlanningType motion_planning_type;  // 运动规划类型：INTERPOLATE 或 SCURVE
+    MotionPlanningType motion_planning_type;  // 运动规划类型：INTERPOLATE/SCURVE/POLYNOMIAL/MULTI_WAYPOINT_POLYNOMIAL
+    double multi_waypoint_velocity_scale{0.6};  // 中间 waypoint 速度缩放 [0,1]
+    double multi_waypoint_min_segment_time{0.6};  // 多 waypoint 单段最短时间(s)
+    double multi_waypoint_max_segment_time{3.0};  // 多 waypoint 单段最长时间(s)
+    // 分段时长预乘系数：补偿五次多项式峰值速度 > 平均速度（末段起止速为 0 时约 1.875）
+    double multi_waypoint_peak_velocity_factor_end{1.875};
+    double multi_waypoint_peak_velocity_factor_mid{1.4};
     
     // 末端力反馈（6D）：弹簧阻尼模型 + 位姿偏差死区 + 速度门控
     std::vector<double> ee_ff_delta_threshold;      // [6] 位姿偏差死区：|δx(i)| < threshold 时该轴不计算力反馈

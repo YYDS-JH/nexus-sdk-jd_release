@@ -45,13 +45,15 @@ struct ControllerConfigParams {
     std::vector<infra_msg::msg::EndEffectorConfig> end_effectors;  // 末端执行器配置
     std::string target_arm_name;                              // 目标机械臂名称
     float timeout;                                            // 超时时间(秒)
+    bool use_motion_planning_waypoints{false};                // 落格时启用途径点规划
     
     // 默认构造函数
     ControllerConfigParams()
         : command_type(infra_msg::srv::ControllerConfig::Response::CMD_SET_CONTROLLER_STATE),
           controller_state(infra_msg::srv::ControllerConfig::Response::STATE_IDLE),
           control_mode(0),
-          timeout(5.0f) {}
+          timeout(5.0f),
+          use_motion_planning_waypoints(false) {}
 };
 
 /**

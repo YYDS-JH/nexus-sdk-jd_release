@@ -73,6 +73,16 @@ public:
         const std::vector<double>& target_joint_angles);
 
     /**
+     * @brief 计算带中间 waypoint 的关节空间运动规划控制命令。
+     *
+     * motion_planning_type 为 MULTI_WAYPOINT_POLYNOMIAL(3) 时走多 waypoint；落格由 nexus 置 use_motion_planning_waypoints 后切换为 3。
+     */
+    MotionPlanningResult computeJointSpaceMotionPlanning(
+        const JointState& current_joint_state,
+        const std::vector<double>& target_joint_angles,
+        const std::vector<std::vector<double>>& waypoints);
+
+    /**
      * @brief 使用线性插值计算关节空间运动规划控制命令（周期调用）
      * 
      * 使用场景：遥操初始化状态（TELEOP_INIT）
@@ -126,6 +136,14 @@ public:
     MotionPlanningResult computeJointMotionPlanningPolynomial(
         const JointState& current_joint_state,
         const std::vector<double>& target_joint_angles);
+
+    /**
+    * @brief 使用多 waypoint 五次多项式规划计算关节空间运动规划控制命令。
+    */
+    MotionPlanningResult computeJointMotionPlanningMultiWaypointPolynomial(
+        const JointState& current_joint_state,
+        const std::vector<double>& target_joint_angles,
+        const std::vector<std::vector<double>>& waypoints);
     
     /**
      * @brief 重置关节空间运动规划进度
@@ -134,6 +152,9 @@ public:
      * 仍然保持“到达后持位”的行为不变。
      */
     void resetMotionPlanning();
+
+    /** 运行时切换运动规划类型（普通复位 type 2 / 落格 type 3） */
+    void setMotionPlanningType(MotionPlanningType type);
 
 
     /**

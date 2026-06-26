@@ -153,7 +153,7 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             'domain_id',
-            default_value='18',
+            default_value='32',
             description='ROS_DOMAIN_ID'
         ),
         DeclareLaunchArgument(

@@ -40,6 +40,11 @@ string target_arm_name
 # 命令执行超时时间 (单位: 秒，0表示不设置超时)
 float32 timeout
 
+# === 运动规划选项（复位/落格）===
+# true: 使用控制器配置中的落格途径点（placement_motion_planning_waypoint_*）
+# false: 普通复位，仅点到点规划，不经过途径点
+bool use_motion_planning_waypoints
+
 ---
 
 # ==================== 响应 (Response) ====================
