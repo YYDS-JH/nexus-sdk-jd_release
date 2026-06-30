@@ -19,7 +19,8 @@ namespace OSCBF {
  */
 enum class ObstacleType {
     SPHERE = 0,      // 球形障碍物
-    PLANE = 1        // 平面障碍物
+    PLANE = 1,       // 平面障碍物
+    BOX = 2          // 轴对齐长方体障碍物（AABB，长宽高可不等）
 };
 
 /**
@@ -71,6 +72,16 @@ public:
         // 平面方程：n^T * x + d = 0
         Eigen::Vector3d plane_normal = Eigen::Vector3d(0, 0, 1);  // 法向量（需要归一化）
         double plane_d = 0.0;  // 平面方程中的 d
+
+        // 长方体障碍物参数（仅用于BOX类型）
+        // position 为长方体中心，half_extent 为三轴半边长（长宽高可不等）。轴对齐（AABB）。
+        Eigen::Vector3d half_extent = Eigen::Vector3d(0.05, 0.05, 0.05);
+
+        // CBF 内部失活裕量(m)：h > margin 时约束松弛，h <= margin 时按比例激活。
+        // 需远大于 safety_distance 以留出充分减速窗口。
+        double interior_cbf_deactivate_margin = 0.25;
+        // CBF RHS 上限(m/s)：比例推力速度截断，应匹配臂笛卡尔可达速度。
+        double cbf_rhs_max = 1.5;
     };
 
     /**
@@ -176,6 +187,21 @@ public:
      * @param collision_manager CollisionPairManager instance (must be loaded)
      */
     void setCollisionPairManager(std::shared_ptr<CollisionPairManager> collision_manager);
+
+    /** 上周期整臂障碍 CBF 是否处于有效约束区（非放松行且 h≤margin 或侵入） */
+    bool wasArmObstacleConstraintActiveLastStep() const;
+
+    /** 上周期 QP 是否实际修正了障碍相关法向速度（用于轻量 LPF，不误伤正常跟踪） */
+    bool wasArmObstacleVelocityCorrectedLastStep() const;
+
+    /** 返回上周期激活的障碍 Lg_h 列表（用于 v_nom 法向投影） */
+    const std::vector<Eigen::VectorXd>& getLastObstacleLgH() const;
+
+    /** 上周期 min(h) 已离开预筛带，可对 q_target 做 IK 回同步 */
+    bool wasArmObstacleClearForResync() const;
+
+    /** 上周期所有障碍约束中的最小 h 值 */
+    double getLastObstacleMinH() const;
 
     Config getConfig() const;
     ObstacleConfig getDefaultObstacleConfig() const;

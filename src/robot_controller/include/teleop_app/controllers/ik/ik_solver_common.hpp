@@ -17,13 +17,42 @@ namespace teleop_app {
 namespace controllers {
 
 /**
+ * @brief IK 内部平面障碍物关节锁定诊断。
+ */
+struct IkObstaclePlaneDiagnostics {
+    bool enabled = false;
+    bool active = false;
+    int num_locked = 0;
+    int num_free = 0;
+    double min_signed_distance = 0.0;
+    double freeze_threshold = 0.0;
+    std::vector<int> locked_joint_indices;
+    /// 与 checked_joint_indices 一一对应的有符号平面距离
+    std::vector<int> checked_joint_indices;
+    std::vector<double> link_signed_distances;
+};
+
+/**
  * @brief 与 RobotModel 原 IK 迭代器一致的数值诊断（可选）。
  */
 struct IkNullspacePinocchioDiagnostics {
     int iterations = 0;
     bool converged = false;
     double final_weighted_error_norm = 0.0;
+    IkObstaclePlaneDiagnostics obstacle;
 };
+
+/**
+ * @brief 编码 IK 障碍物 debug 向量，供 /debug/ik_obstacle 发布。
+ * Layout: [active, num_locked, num_free, min_dist, freeze_thresh,
+ *          converged, iterations, final_err,
+ *          locked_mask_0..locked_mask_{nv-1},
+ *          link_dist for checked joints (variable length, padded to max_obs_slots)]
+ */
+Eigen::VectorXd encodeIkObstacleDebugVector(
+    const IkNullspacePinocchioDiagnostics& diag,
+    int nv,
+    int max_obs_slots = 8);
 
 /**
  * @brief 与 ArmController 冗余臂链路一致：v_nom(i) = clamp((q_des(i)-q_track(i))/ctrl_dt, ±max_velocity)。

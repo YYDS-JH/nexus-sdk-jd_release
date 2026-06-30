@@ -3,6 +3,7 @@
 #include <Eigen/Dense>
 
 #include "teleop_app/controllers/data_types.hpp"
+#include "teleop_app/controllers/ik/ik_solver_common.hpp"
 #include "teleop_app/controllers/robot_model.hpp"
 
 namespace teleop_app {
@@ -15,12 +16,16 @@ struct RedundantArmIkStepResult {
     Eigen::VectorXd q_des;
     Eigen::VectorXd q_ik_full;
     bool ik_ok{false};
+    IkNullspacePinocchioDiagnostics ik_diag;
 };
 
 /// 跨周期持久：上一周期 IK 步的关节输出（含未收敛时的末步迭代值、hold-skip 时为 q_current）；由 ArmController 持有。
 struct RedundantArmIkRuntimeState {
     Eigen::VectorXd last_ik_solution;
     bool has_last_ik_solution{false};
+    /// 仅在 IK 成功时更新，IK 失败时用此值作为 q_des 防止 v_nom=0 死锁
+    Eigen::VectorXd last_successful_ik_solution;
+    bool has_last_successful_ik_solution{false};
     /// redundant_numeric_ik_init=analytic_theory 时：ψ/φ 与 q 历史（与 ar5_analytical_ik 库共用）
     Ar5AnalyticalIkSeedRuntimeState ar5_seed_state{};
 };
@@ -38,7 +43,8 @@ RedundantArmIkStepResult runRedundantArmInverseKinematicsStep(
     const Eigen::VectorXd& q_current_full,
     const Eigen::Matrix4d& desired_pose_for_ik,
     const Eigen::VectorXd& q_target_locked_dof,
-    int locked_dof);
+    int locked_dof,
+    const Eigen::VectorXd* ik_init_override = nullptr);
 
 }  // namespace controllers
 }  // namespace teleop_app

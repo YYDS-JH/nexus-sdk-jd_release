@@ -32,7 +32,9 @@ public:
         double ee_radius = 0.0,
         double alpha = 50.0,
         double alpha2 = 50.0,
-        bool enable_debug = false
+        bool enable_debug = false,
+        double interior_cbf_deactivate_margin = 0.25,
+        double cbf_rhs_max = 1.5
     );
 
     /**
@@ -60,9 +62,10 @@ public:
      * @param vel_ee End-effector velocity (3D) - 仅用于调试，不用于计算Lf_h
      * @param vel_obstacle Obstacle velocity (3D)
      * @param J_ee End-effector Jacobian (3x6)
-     * @param obstacle_type Obstacle type (SPHERE or PLANE)
+     * @param obstacle_type Obstacle type (SPHERE / PLANE / BOX)
      * @param plane_normal Plane normal vector (仅用于PLANE类型，需要归一化)
      * @param plane_d Plane equation parameter d (仅用于PLANE类型)
+     * @param box_half_extent 长方体三轴半边长（仅用于BOX类型，pos_obstacle 为中心；轴对齐）
      * @return CBFResult containing (h, Lg_h, cbf_rhs)
      */
     CBFResult compute_cbf(
@@ -73,7 +76,8 @@ public:
         const Eigen::MatrixXd& J_ee,
         ObstacleType obstacle_type,
         const Eigen::Vector3d& plane_normal,
-        double plane_d
+        double plane_d,
+        const Eigen::Vector3d& box_half_extent = Eigen::Vector3d::Zero()
     );
 
     // Override pure virtual function (not used, but required)

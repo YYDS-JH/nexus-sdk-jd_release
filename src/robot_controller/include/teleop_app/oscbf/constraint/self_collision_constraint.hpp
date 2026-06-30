@@ -40,13 +40,15 @@ public:
      * @param safety_distance Minimum safe distance between links (m)
      * @param alpha CBF coefficient
      * @param enable_debug Whether to print debug information
+     * @param interior_cbf_deactivate_margin 距 barrier 内侧超过该值则在 QP 中放松 CBF（0=始终用 -αh）
      */
     SelfCollisionVelocityConstraint(
         std::shared_ptr<CollisionPairManager> collision_manager,
         const std::string& name = "self_collision",
         double safety_distance = 0.05,
         double alpha = 50.0,
-        bool enable_debug = false
+        bool enable_debug = false,
+        double interior_cbf_deactivate_margin = 0.0
     );
 
     /**

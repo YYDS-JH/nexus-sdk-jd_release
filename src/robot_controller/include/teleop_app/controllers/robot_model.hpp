@@ -7,6 +7,7 @@
 #include <Eigen/Core>
 #include <pinocchio/multibody/data.hpp>
 #include "teleop_app/controllers/data_types.hpp"
+#include "teleop_app/controllers/ik/ik_solver_common.hpp"
 
 namespace teleop_app {
 namespace controllers {
@@ -358,7 +359,8 @@ public:
         const Eigen::VectorXd& q_ref = Eigen::VectorXd(),
         const Eigen::VectorXd* ik_joint_min = nullptr,
         const Eigen::VectorXd* ik_joint_max = nullptr,
-        double ik_joint_clamp_margin = -1.0);
+        double ik_joint_clamp_margin = -1.0,
+        IkNullspacePinocchioDiagnostics* diag = nullptr);
 
     /**
      * @brief AR5 半解析+φ/ψ 扫描，生成数值 IK 初值（需 cfg.enable；失败返回 false）

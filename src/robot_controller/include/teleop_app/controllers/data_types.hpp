@@ -406,6 +406,16 @@ enum class QpRefJointPolicy : std::uint8_t {
     std::string vqp_arm_angle_elbow_frame = "AR5-5_07L-W4C4A2_link4";
     std::string vqp_arm_angle_wrist_frame = "AR5-5_07L-W4C4A2_link7";
 
+    // IK 级平面障碍物避障（enable=false 时 IK 行为完全不变）
+    bool   vqp_obstacle_plane_enable = false;
+    Eigen::Vector3d vqp_obstacle_plane_normal{0.0, 1.0, 0.0};
+    Eigen::Vector3d vqp_obstacle_plane_point{0.0, 0.0, 0.0};
+    double vqp_obstacle_plane_safety_distance = 0.015;
+    double vqp_obstacle_plane_link_radius = 0.07;
+    double vqp_obstacle_plane_alpha = 3.0;
+    double vqp_obstacle_plane_margin = 0.04;
+    std::vector<std::string> vqp_obstacle_plane_exclude_frames{};
+
     /// 单周期 ‖q̇‖ 上限 (rad/s)；≤0 不限
     double vqp_max_qdot_norm = 0.0;
 
@@ -501,6 +511,14 @@ enum class QpRefJointPolicy : std::uint8_t {
           vqp_arm_angle_shoulder_frame("AR5-5_07L-W4C4A2_link2"),
           vqp_arm_angle_elbow_frame("AR5-5_07L-W4C4A2_link4"),
           vqp_arm_angle_wrist_frame("AR5-5_07L-W4C4A2_link7"),
+          vqp_obstacle_plane_enable(false),
+          vqp_obstacle_plane_normal(0.0, 1.0, 0.0),
+          vqp_obstacle_plane_point(0.0, 0.0, 0.0),
+          vqp_obstacle_plane_safety_distance(0.015),
+          vqp_obstacle_plane_link_radius(0.07),
+          vqp_obstacle_plane_alpha(3.0),
+          vqp_obstacle_plane_margin(0.04),
+          vqp_obstacle_plane_exclude_frames(),
           vqp_max_qdot_norm(0.0),
           vqp_max_total_joint_change(1.0),
           ik_hold_skip_solver_when_within_tolerance(false),
@@ -826,6 +844,8 @@ struct ControllerParams {
         struct SelfCollisionConfig {
             double safety_distance = 0.02;
             double alpha = 100.0;
+            /** 速度QP：连杆间距 h 大于该值则放松 CBF；同时作为建约束的距离阈值。0=始终用 -αh */
+            double interior_cbf_deactivate_margin = 0.0;
         } self_collision_config;
         
         // 默认障碍物配置
@@ -835,6 +855,20 @@ struct ControllerParams {
             double ee_radius = 0.03;
             double alpha = 10.0;
         } default_obstacle_config;
+
+        // 静态障碍物列表（整臂避障，来自 YAML cbf_config.obstacles）
+        struct StaticObstacle {
+            int type = 0;
+            Eigen::Vector3d position = Eigen::Vector3d::Zero();
+            Eigen::Vector3d plane_normal = Eigen::Vector3d(0, 0, 1);
+            Eigen::Vector3d half_extent = Eigen::Vector3d(0.05, 0.05, 0.05);
+            double obstacle_radius = 0.03;
+            double safety_distance = 0.1;
+            double alpha = 10.0;
+            double interior_cbf_deactivate_margin = 0.25;
+            double cbf_rhs_max = 1.5;
+        };
+        std::vector<StaticObstacle> static_obstacles;
     } cbf_config;
 
     /// 动力学外力估计器（与虚拟弹簧并列，默认关闭）

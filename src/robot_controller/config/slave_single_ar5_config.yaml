@@ -25,7 +25,7 @@
           - "AR5-5_07L-W4C4A2_joint_5"
           - "AR5-5_07L-W4C4A2_joint_6"
           - "AR5-5_07L-W4C4A2_joint_7"
-        arm_init_joint_position: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        arm_init_joint_position: [-1.57, 0.0, 0.0, 1.77, 0.0, 0.0, 0.0]
         arm_init_position_matrix: [
           1.0, 0.0, 0.0, 0.0,
           0.0, 1.0, 0.0, 0.0,

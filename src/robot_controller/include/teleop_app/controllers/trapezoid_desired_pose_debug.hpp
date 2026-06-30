@@ -16,6 +16,9 @@ Eigen::Matrix4d makeDebugTrapezoidDesiredPose(
     const Eigen::Matrix4d& desired_pose_external,
     const Eigen::Matrix4d& T_ee_current_fk);
 
+/** 遥操复位时调用，下次 makeDebugTrapezoidDesiredPose 重新以当前 FK 为平衡位姿 */
+void resetDebugTrapezoidDesiredPose();
+
 }  // namespace controllers
 }  // namespace teleop_app
 

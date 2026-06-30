@@ -23,7 +23,7 @@
       # ══════════════════════════════════════════════════════════════════════
       #  1. 基础设置
       # ══════════════════════════════════════════════════════════════════════
-      is_simulation: false
+      is_simulation: true
       control_publish_rate: 500
       state_publish_rate: 10
       teleop_manager_state_topic: "/teleop/teleop_manager_state"
@@ -190,7 +190,7 @@
         vqp_arm_angle_weight: 0.03
         vqp_arm_angle_kp: 1.5
         vqp_arm_angle_ref_policy: user_specified        # q_ref / initial / user_specified
-        vqp_arm_angle_ref_joint_positions: [-1.57, 0.52, 0.0, 1.05, 0.0, 0.0, 0.0]
+        vqp_arm_angle_ref_joint_positions: [-1.57, 0.2, 0.0, 2.0, 0.0, 0.0, 0.0]
         vqp_arm_angle_user_ref: 0.0            # policy=user_specified 时，在参考平面上的额外角度偏置(rad)
         vqp_arm_angle_limit_enable: true
         vqp_arm_angle_min: -0.6                # 相对参考平面允许的最小臂角(rad)
@@ -204,6 +204,15 @@
         # ── 裁剪 ────────────────────────────────────────────────
         vqp_max_qdot_norm: 2.0            # ‖q̇‖ 上限 (rad/s)；0 = 不限
         vqp_max_total_joint_change: 0.1   # ‖q_out − q_init‖ 上限 (rad)；0 = 不限
+
+        # ── IK 级平面障碍物避障 ─────────────────────────────
+        vqp_obstacle_plane_enable: true
+        vqp_obstacle_plane_normal: [1.0, 0.0, 0.0]
+        vqp_obstacle_plane_point: [-0.1, 0.0, 0.4]
+        vqp_obstacle_plane_safety_distance: 0.015
+        vqp_obstacle_plane_link_radius: 0.05
+        vqp_obstacle_plane_alpha: 3.0
+        vqp_obstacle_plane_margin: 0.06
 
         # ══════════════════════════════════════════════════════
         #  仅 projected_damped_least_squares（选其他算法时本段不参与计算）
@@ -278,9 +287,9 @@
           safety_margin: 0.1
 
       # ══════════════════════════════════════════════════════════════════════
-      #  6. CBF 安全约束
+      #  6. CBF 安全约束（IK 级平面避障测试时关闭 enable_cbf）
       # ══════════════════════════════════════════════════════════════════════
-      enable_cbf: true
+      enable_cbf: false
       cbf_urdf_path: "robot_controller/oscbf/cbf_ar5_spherized.urdf"
       cbf_config:
         enable_task_space: false
@@ -301,6 +310,7 @@
           max: [3.1067, 2.0944, 3.1067, 2.5307, 3.1067, 0.8472, 0.8472]
           safety_margin: 0.1
           alpha: 40.0
+          interior_cbf_deactivate_margin: 0.3
         joint_velocity_config:
           min: [-1.5, -2.0, -1.0, -2.0, -2.0, -2.0, -2.0]
           max: [1.5, 2.0, 1.0, 2.0, 2.0, 2.0, 2.0]
@@ -309,20 +319,32 @@
         self_collision_config:
           safety_distance: 0.02
           alpha: 100.0
+          interior_cbf_deactivate_margin: 0.05
         default_obstacle_config:
           safety_distance: 0.01
           obstacle_radius: 0.03
           ee_radius: 0.03
           alpha: 10.0
+        obstacles:
+          count: 1
+          obstacle_0:
+            type: "plane"
+            position: [-0.1, 0.0, 0.4]
+            plane_normal: [1.0, 0.0, 0.0]
+            half_extent: [0.0, 0.12, 0.4]
+            safety_distance: 0.015
+            alpha: 3.0
+            interior_cbf_deactivate_margin: 0.04
+            cbf_rhs_max: 0.8
 
       # ══════════════════════════════════════════════════════════════════════
       #  7. 后处理滤波 / MIT 指令选项
       # ══════════════════════════════════════════════════════════════════════
       post_cbf_joint_reference_filter:
         enable: true
-        position_mean_window: 5
+        position_mean_window: 7
         position_new_weight: 0.05
-        velocity_new_weight: 0.02
+        velocity_new_weight: 0.045
 
       mit_cmd_velocity_zero: true   # true: cmd.velocity 置零；false: 使用 CBF 输出速度
       motion_planning_type: 2                # 普通复位：2=五次多项式

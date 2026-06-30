@@ -54,7 +54,9 @@ public:
         double alpha = 50.0,
         double alpha2 = 0.0,
         double min_distance_epsilon = 1e-6,
-        double interior_cbf_deactivate_margin = 0.0
+        double interior_cbf_deactivate_margin = 0.0,
+        double cbf_rhs_max = 0.5,
+        bool use_linear_alpha_h = false
     );
 
     virtual ~BaseVelocityCBFConstraint() = default;
@@ -130,6 +132,8 @@ public:
     double getAlpha() const { return alpha_; }
     double getAlpha2() const { return alpha2_; }
     double getMinDistanceEpsilon() const { return min_distance_epsilon_; }
+    double getInteriorCbfDeactivateMargin() const { return interior_cbf_deactivate_margin_; }
+    double getCbfRhsMax() const { return cbf_rhs_max_; }
 
 protected:
     std::string name_;
@@ -138,6 +142,9 @@ protected:
     double min_distance_epsilon_;
     /** 距 barrier 内侧超过该值则不在 QP 中收紧 CBF（0=关闭，始终用 -αh） */
     double interior_cbf_deactivate_margin_;
+    /** 比例屏障 RHS 上限(m/s),截断到关节可达范围 */
+    double cbf_rhs_max_{0.5};
+    bool use_linear_alpha_h_{false};
 };
 
 } // namespace OSCBF

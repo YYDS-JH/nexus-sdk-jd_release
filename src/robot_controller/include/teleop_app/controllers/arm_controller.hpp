@@ -352,7 +352,8 @@ public:
         rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr fk_q_target_xyz_rpy_pub,
         rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr q_meas_pub,
         rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr joint_pos_error_pub,
-        rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr ee_pos_track_err_pub);
+        rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr ee_pos_track_err_pub,
+        rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr ik_obstacle_pub);
 
     void setForceEstDebugPublishers(
         rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr tau_meas_pub,

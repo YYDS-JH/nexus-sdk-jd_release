@@ -117,6 +117,7 @@ struct ArmController::Impl {
     Eigen::VectorXd last_desired_pose_{Eigen::VectorXd::Zero(6)};
     Eigen::VectorXd last_ik_target_pose_xyz_rpy_{Eigen::VectorXd::Zero(6)};
     Eigen::VectorXd last_joint_pos_error_;
+    IkNullspacePinocchioDiagnostics last_ik_diag_;
 
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr debug_T_des_xyz_rpy_pub_;
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr debug_q_des_ik_ns_pub_;
@@ -126,6 +127,7 @@ struct ArmController::Impl {
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr debug_q_meas_pub_;
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr debug_joint_pos_error_pub_;
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr debug_ee_pos_track_err_pub_;
+    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr debug_ik_obstacle_pub_;
 
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr debug_force_tau_meas_pub_;
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr debug_force_tau_model_pub_;
@@ -156,7 +158,8 @@ struct ArmController::Impl {
                                   const Eigen::VectorXd& q_target_after_cbf,
                                   const Eigen::VectorXd& fk_q_target_xyz_rpy6,
                                   const Eigen::VectorXd& q_meas,
-                                  const Eigen::VectorXd& joint_pos_error);
+                                  const Eigen::VectorXd& joint_pos_error,
+                                  const IkNullspacePinocchioDiagnostics& ik_diag);
 
     Eigen::VectorXd computeFrictionCompensation(
         const Eigen::VectorXd& current_v,

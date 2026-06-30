@@ -44,6 +44,7 @@ namespace Events {
     const std::string BOOT_COMPLETE = "boot_complete";
     const std::string RESET_REQUEST = "reset_request";
     const std::string RESET_SUCCESS = "reset_success";
+    const std::string RESET_ABORT = "reset_abort";
     const std::string RESET_FAILURE = "reset_failure";
     const std::string TELEOP_START = "teleop_start";
     const std::string TELEOP_PAUSE = "teleop_pause";
