@@ -62,8 +62,9 @@ _PORT_BASE = 7000
 _MAX_AUTO_PARTICIPANT_INDEX = 50
 _NEXUS_MANAGE_START_DELAY_SEC = 8.0
 _SUPERVISOR_PARTICIPANT_INDEX = 3
-_DDS_STACK_CONFIG_PREFIX = 'cyclonedds_nexus_cross_subnet_v2_stack_'
-_DDS_SUPERVISOR_CONFIG_PREFIX = 'cyclonedds_nexus_cross_subnet_v2_supervisor_'
+_SCHEDULER_PARTICIPANT_INDEX = 4
+_DDS_STACK_CONFIG_PREFIX = 'cyclonedds_nexus_cross_subnet_v3_stack_'
+_DDS_SUPERVISOR_CONFIG_PREFIX = 'cyclonedds_nexus_cross_subnet_v3_supervisor_'
 
 _MASTER_NODES = [
     ('teleop_adapter',   'master_nexus_single.launch.py'),
@@ -179,11 +180,13 @@ def _find_existing_supervisor_cyclonedds_xml():
 
 
 def _legacy_peer_counts(role, local_nodes, remote_nodes):
+    """Peers 含从臂 supervisor(7003) 与 Master scheduler_bridge(7004)。"""
+    local = len(local_nodes)
     if role == 'master':
-        return len(local_nodes), len(remote_nodes)
+        return local, len(remote_nodes) + 1
     if role == 'slave':
-        return len(local_nodes), len(remote_nodes)
-    return len(local_nodes), len(remote_nodes)
+        return local, len(remote_nodes) + 1
+    return local, len(remote_nodes)
 
 
 def _include(package: str, launch_file: str, launch_arguments=None):
@@ -363,7 +366,7 @@ def launch_setup(context, *args, **kwargs):
                 peers_xml = generate_peers_xml(
                     slaves,
                     local_count=len(_MASTER_NODES),
-                    remote_count=len(_SLAVE_NODES),
+                    remote_count=len(_SLAVE_NODES) + 1,
                     port_base=_PORT_BASE,
                     local_ip='127.0.0.1',
                 )
@@ -381,7 +384,7 @@ def launch_setup(context, *args, **kwargs):
                 network_interface = matched['network_interface']
                 external_ip = matched['ip']
                 peers_xml = _make_peers_xml(
-                    len(_SLAVE_NODES), len(_MASTER_NODES), _MASTER_EXTERNAL_IP,
+                    len(_SLAVE_NODES), len(_MASTER_NODES) + 1, _MASTER_EXTERNAL_IP,
                     local_ip='127.0.0.1')
                 stack_xml = _make_cyclonedds_xml(
                     network_interface, external_ip, peers_xml)
@@ -422,7 +425,7 @@ def launch_setup(context, *args, **kwargs):
 
     elif use_supervisor and not supervisor_dds_path:
         peers_xml = _make_peers_xml(
-            len(_SLAVE_NODES), len(_MASTER_NODES), _MASTER_EXTERNAL_IP,
+            len(_SLAVE_NODES), len(_MASTER_NODES) + 1, _MASTER_EXTERNAL_IP,
             local_ip='127.0.0.1')
         supervisor_xml = _make_cyclonedds_xml(
             _SLAVE_NETWORK_INTERFACE, _SLAVE_EXTERNAL_IP, peers_xml,
