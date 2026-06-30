@@ -171,6 +171,7 @@ private:
                          const std::vector<double>& target_pos,
                          double tolerance) const;
     bool checkResetPositionReached();  // 检查是否到达复位位置
+    bool shouldResetSlaveArm() const;
 };
 
 /**
