@@ -67,7 +67,7 @@
     robot_controller_config_service: "/robot/robot_controller_config"
     teleop_controller_config_service: "/teleop/teleop_controller_config"
 
-    # ==================== 云骥反馈 (/cl/yj/operator) ====================
+    # ==================== 调度反馈 (/cl/yj/operator，协议 Topic 名) ====================
     # slave_stack_supervisor_handoff=true 时由从臂 supervisor 发布，主控关闭
     yj_operator_enabled: false
     yj_operator_topic: "/cl/yj/operator"

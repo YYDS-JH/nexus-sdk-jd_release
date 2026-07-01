@@ -642,6 +642,15 @@ struct Ar5DynamicsForceEstimatorConfig {
 };
 
 /**
+ * @brief 动力学/虚拟弹簧外力估计是否参与 CartesianImpedance 发布（从臂 SLAVE）
+ *
+ * 与 ik_boundary_force / ik_obstacle_plane_force 独立；关闭时不调用 estimateExternalForce。
+ */
+struct ExternalForceFeedbackConfig {
+    bool enable{true};
+};
+
+/**
  * @brief IK 工作空间边界虚拟力配置
  *
  * 当从臂连续 IK 失败达到阈值时，通过 CartesianImpedance 通道发布虚拟弹簧力，
@@ -660,6 +669,30 @@ struct IkBoundaryForceConfig {
     std::vector<double> upper_limit;                // [6] 饱和上限 (N, Nm)
     double deadzone_hysteresis_ratio{0.7};          // 滞回比例：入=lower*ratio，出=lower
     std::vector<double> lpf_alpha;                   // [6] 边界力一阶 IIR LPF 系数，1.0=无滤波
+};
+
+/**
+ * @brief IK 平面障碍虚拟力配置（与 vqp_obstacle_plane_* 几何一致）
+ *
+ * 当 VQP IK 障碍锁定激活时，沿平面法向（安全侧）推主臂，不占用 ik_boundary_force。
+ * 仅 ArmRole::SLAVE 生效。
+ */
+struct IkObstaclePlaneForceConfig {
+    bool enable{false};
+    int consecutive_active_threshold{3};     // obs_active 连续 N 帧后激活
+    int recovery_inactive_threshold{8};      // obs_active 消失连续 M 帧后退出
+    int activation_min_locked_joints{1};     // num_locked >= 此值视为贴障
+
+    double plane_normal_kp{120.0};           // N/m，按侵入深度
+    double plane_normal_kd{25.0};            // N·s/m，法向速度阻尼
+    bool resist_only_penetration{true};      // true：主端期望已脱离冻结带时不给力
+    bool use_desired_pose_penetration{true}; // true：侵入深度由期望末端位置计算
+
+    double velocity_gate{0.0};
+    std::vector<double> lower_limit;
+    std::vector<double> upper_limit;
+    double deadzone_hysteresis_ratio{0.7};
+    std::vector<double> lpf_alpha;
 };
 
 /**
@@ -727,7 +760,8 @@ struct ControllerParams {
     std::vector<double> force_publish_lpf_alpha;  // [6] 正常力反馈一阶 IIR LPF 系数，1.0=无滤波
     std::vector<double> force_publish_output_lower_limit;  // [6] 映射后输出下限，退出死区时从该值起始 (N, Nm)
     std::vector<double> force_feedback_extra_kd;         // [arm_dof] 力反馈/边界力非零时附加到 cmd.kd 的阻尼
-    double ee_ff_gain{0.0};                             // 主臂：末端力反馈增益，0=关闭
+    bool force_feedback_receive_enable{true};          // 主臂：是否接收并施加 6D 力反馈（与 ee_ff_gain 配合）
+    double ee_ff_gain{0.0};                             // 主臂：末端力反馈增益（仅缩放，非开关）
     double ee_ff_rotation_z_deg{0.0};                  // 力反馈绕Z轴旋转角度（度），补偿场景坐标系偏移
     bool ee_ff_rotation_z_auto{false};                 // 从臂：true 时根据 wrist 1 关节复位角自动推导 ee_ff_rotation_z_deg
     std::vector<double> ee_ff_static_friction_margin; // 主臂：每关节静摩擦抬升裕量(N·m)，长度=arm_dof
@@ -873,8 +907,11 @@ struct ControllerParams {
 
     /// 动力学外力估计器（与虚拟弹簧并列，默认关闭）
     Ar5DynamicsForceEstimatorConfig dynamics_force_estimator{};
+    /// 外力估计是否参与发布（从臂）
+    ExternalForceFeedbackConfig external_force_feedback{};
     /// IK 工作空间边界虚拟力
     IkBoundaryForceConfig ik_boundary_force{};
+    IkObstaclePlaneForceConfig ik_obstacle_plane_force{};
 };
 
 /**

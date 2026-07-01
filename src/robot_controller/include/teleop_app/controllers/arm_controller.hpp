@@ -392,6 +392,18 @@ public:
         const Eigen::Matrix4d& desired_pose) const;
 
     /**
+     * @brief 查询 IK 平面障碍虚拟力是否激活
+     */
+    bool isIkObstaclePlaneForceActive() const;
+
+    /**
+     * @brief 计算 IK 平面障碍虚拟力（沿障碍面法向推离，仅抵抗侵入）
+     */
+    CartesianForce computeIkObstaclePlaneForce(
+        const JointState& current_joint_state,
+        const Eigen::Matrix4d& desired_pose) const;
+
+    /**
      * @brief 复位后将 IK 配置同步到运行时 RobotModel（如 vqp_arm_angle_ref_joint_positions）
      *
      * controller_params_ 在 CMD_SET_RESET_POSITION 中更新后须调用，否则 IK 仍用 initialize 时的副本。

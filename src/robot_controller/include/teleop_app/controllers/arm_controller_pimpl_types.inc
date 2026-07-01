@@ -97,6 +97,9 @@ struct ArmController::Impl {
     std::atomic<int> consecutive_ik_failures_{0};
     std::atomic<int> consecutive_ik_successes_{0};
     std::atomic<bool> ik_boundary_active_{false};
+    std::atomic<int> consecutive_obs_plane_active_{0};
+    std::atomic<int> consecutive_obs_plane_inactive_{0};
+    std::atomic<bool> ik_obstacle_plane_force_active_{false};
     mutable std::mutex ik_boundary_mutex_;
     Eigen::VectorXd last_valid_ik_joint_position_;
     double ik_boundary_activation_time_{-1.0};
@@ -167,6 +170,11 @@ struct ArmController::Impl {
         double position_error_norm = -1.0);
 
     void updateFilteredVelocity(const Eigen::VectorXd& current_v, int model_dof);
+
+    void updateIkForceFeedbackState(
+        bool ik_ok,
+        const Eigen::VectorXd& q_on_success,
+        const Eigen::VectorXd& q_current);
 };
 
 }  // namespace controllers

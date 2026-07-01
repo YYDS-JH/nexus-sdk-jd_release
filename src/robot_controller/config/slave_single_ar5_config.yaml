@@ -5,7 +5,7 @@
       robot_name: "ar5"
       # 非 imeta，避免夹爪查表等厂商专用逻辑；无夹爪时 has_gripper 为 false
       robot_type: "generic"
-      urdf_path: "package://robot_controller/urdf/AR5-5_07L-W4C4A2.urdf"
+      urdf_path: "package://robot_controller/urdf/AR5_suction_cup.urdf"
       robot_base_frame: "AR5-5_07L-W4C4A2_base"
       # 仅机械臂 7 轴，无 right_end_effector → 硬件总自由度 = 7
       model_configuration: ["right_wrist"]

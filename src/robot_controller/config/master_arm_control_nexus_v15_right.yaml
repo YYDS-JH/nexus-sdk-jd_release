@@ -13,7 +13,10 @@
       # Teleop 管理器状态话题（仅在 TeleopRunning 期间启用力反馈）
       teleop_manager_state_topic: "/teleop/teleop_manager_state"
 
-      # 主臂力反馈增益（从臂外力估计 × ee_ff_gain → 主臂关节力矩）
+      # 主臂 6D 力反馈接收总开关（与 TeleopRunning 运行时门控配合；三类力共用）
+      force_feedback_receive:
+        enable: true
+      # 主臂力反馈增益（接收力 × ee_ff_gain → 关节力矩；仅缩放，非开关）
       ee_ff_gain: 0.6
       # 力反馈 xy 旋转由从臂 publish 前完成（ee_ff_rotation_z_auto）；主臂侧保持 0 避免双重旋转
       # ee_ff_rotation_z_deg: 0.0
