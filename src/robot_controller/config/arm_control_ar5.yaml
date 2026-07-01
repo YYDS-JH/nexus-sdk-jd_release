@@ -23,7 +23,7 @@
       # ══════════════════════════════════════════════════════════════════════
       #  1. 基础设置
       # ══════════════════════════════════════════════════════════════════════
-      is_simulation: true
+      is_simulation: false
       control_publish_rate: 500
       state_publish_rate: 10
       teleop_manager_state_topic: "/teleop/teleop_manager_state"
@@ -446,7 +446,7 @@
       # 当从臂连续 IK 失败达到阈值时，沿 CartesianImpedance 通道发布虚拟弹簧力，
       # IK 工作空间边界虚拟力：从臂 IK 连续失败时，生成虚拟弹簧力推主臂回可达区域
       ik_boundary_force:
-        enable: false
+        enable: true
         consecutive_failure_threshold: 10       # 连续 IK 失败 N 次后激活（500Hz 下 10=20ms）
         recovery_success_threshold: 3           # 连续成功 M 次后退出
         boundary_kp: [100.0, 100.0, 100.0, 2.0, 2.0, 2.0]   # [N/m, Nm/rad] 弹簧刚度

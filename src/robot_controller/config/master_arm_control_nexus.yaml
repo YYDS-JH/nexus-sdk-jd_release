@@ -5,7 +5,7 @@
       # 共享控制参数（所有机械臂通用）
       # ========================================
       # 仿真模式标志
-      is_simulation: true            # true: 仿真模式（不加电机惯量）, false: 真实机器人（加电机惯量）
+      is_simulation: false            # true: 仿真模式（不加电机惯量）, false: 真实机器人（加电机惯量）
       
       # 控制频率参数
       control_publish_rate: 500      # 控制命令发布频率 (Hz)
@@ -14,7 +14,7 @@
       teleop_manager_state_topic: "/teleop/teleop_manager_state"
 
       # 主臂力反馈增益（从臂外力估计 × ee_ff_gain → 主臂关节力矩）
-      ee_ff_gain: 0.0
+      ee_ff_gain: 0.8
       # 力反馈 xy 旋转由从臂 publish 前完成（ee_ff_rotation_z_auto）；主臂侧保持 0 避免双重旋转
       # ee_ff_rotation_z_deg: 0.0
 
@@ -122,8 +122,8 @@
       enable_joint_soft_limit: true
       soft_limit_lower: [-1.5708, -1.2217, -0.7854, -0.6981, -0.8727, -0.5854]
       soft_limit_upper: [ 1.5708,  0.6981,  0.5,    1.57,  0.8727,  1.9416]
-      soft_limit_kp: [15.0, 15.0, 15.0, 4.0, 4.0, 2.0]              # (N·m/rad)
-      soft_limit_kd: [0.8, 0.8, 0.8, 0.4, 0.4, 0.4]                 # (N·m·s/rad)
+      soft_limit_kp: [15.0, 15.0, 15.0, 3.0, 4.0, 2.0]              # (N·m/rad)
+      soft_limit_kd: [0.8, 0.8, 0.8, 0.15, 0.4, 0.4]                 # (N·m·s/rad)
       soft_limit_unidirectional_damping: [0, 0, 0, 0, 0, 1]          # 0=双向阻尼, 1=单向阻尼(仅阻碍越限方向)
       soft_limit_transition_width: [0.1, 0.1, 0.1, 0.2, 0.2, 0.2]   # (rad)
       soft_limit_tau_max: [6.0, 6.0, 6.0, 0.6, 0.6, 0.3]            # (N·m)
